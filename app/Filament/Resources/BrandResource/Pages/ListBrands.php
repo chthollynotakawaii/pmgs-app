@@ -13,7 +13,9 @@ class ListBrands extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Add Brand') // Change button text
+                ->icon('heroicon-o-plus-circle'), // Change icon
         ];
     }
 }

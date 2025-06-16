@@ -88,4 +88,9 @@ class InventoryRecord extends Model
             );
         });
     }
+    public function borrowingLogs()
+    {
+        return $this->hasMany(BorrowingLog::class);
+    }
+
 }

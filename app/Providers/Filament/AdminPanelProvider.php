@@ -27,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('PMGS')
+            ->favicon(asset('images/logo.png'))
             ->login()
             ->colors([
                 'primary' => '#0434fd',

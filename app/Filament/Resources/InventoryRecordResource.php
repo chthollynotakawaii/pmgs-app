@@ -33,7 +33,7 @@ class InventoryRecordResource extends Resource
 {
     protected static ?string $model = InventoryRecord::class;
     protected static ?string $navigationGroup = 'Inventory Management';
-
+    protected static ?int $navigationSort = 1;
     protected static ?string $navigationIcon = 'heroicon-s-list-bullet';
 
     public static function form(Form $form): Form
@@ -105,6 +105,7 @@ class InventoryRecordResource extends Resource
 
                                 RichEditor::make('description')
                                     ->label('Description')
+                                    ->placeholder('Enter a detailed description of the inventory item.')
                                     ->disableToolbarButtons(['attachFiles', 'codeBlock', 'table']),
                             ]),
 
@@ -136,14 +137,16 @@ class InventoryRecordResource extends Resource
                                 Select::make('status')
                                     ->label('Status')
                                     ->options([
-                                        'draft' => 'Draft',
-                                        'reviewing' => 'Reviewing',
-                                        'published' => 'Published',
+                                        'Functional' => 'Functional',
+                                        'Defective' => 'Defective',
+                                        'Damaged' => 'Damaged',
+                                        'On Maintenance' => 'On Maintenance',
                                     ])
                                     ->required(),
 
                                 RichEditor::make('remarks')
                                     ->label('Remarks')
+                                    ->placeholder('Enter any additional remarks or notes about the inventory item.')
                                     ->disableToolbarButtons(['attachFiles', 'codeBlock', 'table']),
                             ]),
                     ]),
@@ -163,7 +166,15 @@ class InventoryRecordResource extends Resource
                 TextColumn::make('department.name')->label('Department')->sortable()->searchable(),
                 TextColumn::make('supplier.name')->label('Supplier')->sortable()->searchable(),
                 TextColumn::make('location.name')->label('Location')->sortable()->searchable(),
-                TextColumn::make('status')->label('Status')->sortable()->searchable(),
+                TextColumn::make('status')->label('Status')->sortable()->searchable()
+                ->badge()
+                ->color(fn ($state) => match ($state) {
+                    'Functional' => 'success',
+                    'Defective' => 'danger',
+                    'Damaged' => 'warning',
+                    'On Maintenance' => 'info',
+                    default => 'secondary',
+                }),
                 TextColumn::make('created_at')->label('Created At')->dateTime()->sortable(),
                 TextColumn::make('updated_at')->label('Updated At')->dateTime()->sortable(),
             ])

@@ -13,7 +13,9 @@ class ListModels extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Add Model') // Change button text
+                ->icon('heroicon-o-plus-circle'), // Change icon
         ];
     }
 }
