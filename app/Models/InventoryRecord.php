@@ -23,6 +23,7 @@ class InventoryRecord extends Model
         'supplier_id',
         'location_id',
         'status',
+        'borrowed',
     ];
 
     // Relationships

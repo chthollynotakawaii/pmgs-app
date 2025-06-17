@@ -31,14 +31,29 @@ class UniformDistributionResource extends Resource
         return $form->schema([
             Select::make('uniform_inventory_id')
                 ->label('Uniform')
-                ->options(
-                    UniformInventory::with('inventoryRecord')->get()->mapWithKeys(function ($item) {
-                        $serial = $item->inventoryRecord?->serial_number ?? 'N/A';
-                        return [$item->id => "{$item->type} - {$item->size} - SN: {$serial} (Stock: {$item->quantity})"];
-                    })
-                )
-                ->required()
-                ->searchable(),
+                ->searchable()
+                ->getSearchResultsUsing(function (string $search) {
+                    return UniformInventory::with('inventoryRecord')
+                        ->whereHas('inventoryRecord', fn ($q) =>
+                            $q->where('serial_number', 'like', "%{$search}%")
+                        )
+                        ->limit(50)
+                        ->get()
+                        ->mapWithKeys(function ($item) {
+                            $serial = $item->inventoryRecord?->serial_number ?? 'N/A';
+                            return [
+                                $item->id => "SN: {$serial} - {$item->type} - {$item->size} - (Stock: {$item->quantity})"
+                            ];
+                        });
+                })
+                ->getOptionLabelUsing(function ($value) {
+                    $item = UniformInventory::with('inventoryRecord')->find($value);
+                    if (!$item) return null;
+
+                    $serial = $item->inventoryRecord?->serial_number ?? 'N/A';
+                    return "SN: {$serial} - {$item->type} - {$item->size} - (Stock: {$item->quantity})";
+                })
+                ->required(),
 
             TextInput::make('student_id')
                 ->label('Student ID')
@@ -88,46 +103,64 @@ class UniformDistributionResource extends Resource
                 TextColumn::make('uniformInventory.type')
                     ->label('Type')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('uniformInventory.size')
                     ->label('Size')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('uniformInventory.inventoryRecord.serial_number')
-                    ->label('Serial No.')
+                    ->label('Serial Number')
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('student_id')
                     ->label('Student ID')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('student_name')
                     ->label('Name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('department.name')
                     ->label('Department')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('receipt_number')
-                    ->label('Receipt #')
+                    ->label('Receipt Number')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('quantity')
-                    ->label('Qty')
-                    ->sortable(),
+                    ->label('Quantity')
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('created_at')
                     ->label('Date')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
+                
+                TextColumn::make('updated_at')
+                    ->label('Updated At')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(),
+
+                TextColumn::make('remarks')
+                    ->label('Remarks')
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('uniform_inventory_id')
@@ -152,6 +185,8 @@ class UniformDistributionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

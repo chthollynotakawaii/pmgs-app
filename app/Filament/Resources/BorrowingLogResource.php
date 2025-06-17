@@ -30,25 +30,51 @@ class BorrowingLogResource extends Resource
             ->schema([
                 Select::make('inventory_record_id')
                     ->label('Inventory Item')
-                    ->options(fn () => InventoryRecord::pluck('serial_number', 'id'))
                     ->searchable()
-                    ->columnSpanFull()
-                    ->required(),
+                    ->getSearchResultsUsing(fn (string $search) => 
+                        \App\Models\InventoryRecord::query()
+                            ->where('borrowed', true)
+                            ->where('serial_number', 'like', "%{$search}%")
+                            ->limit(10)
+                            ->pluck('serial_number', 'id')
+                    )
+                    ->getOptionLabelUsing(fn ($value) => 
+                        \App\Models\InventoryRecord::find($value)?->serial_number
+                    )
+                    ->required()
+                    ->columnSpanFull(),
+
 
                 Select::make('user_id')
                     ->label('Borrower')
-                    ->options(fn () => User::pluck('name', 'id'))
                     ->searchable()
-                    ->columnSpanFull()
-                    ->required(),
+                    ->getSearchResultsUsing(fn (string $search) => 
+                        \App\Models\User::query()
+                            ->where('name', 'like', "%{$search}%")
+                            ->limit(10)
+                            ->pluck('name', 'id')
+                    )
+                    ->getOptionLabelUsing(fn ($value) => 
+                        \App\Models\User::find($value)?->name
+                    )
+                    ->required()
+                    ->columnSpanFull(),
 
                 Select::make('location_id')
                     ->label('Location')
-                    ->options(fn () => Location::pluck('name', 'id'))
                     ->searchable()
-                    ->columnSpanFull()
-                    ->required(),
-
+                    ->getSearchResultsUsing(fn (string $search) => 
+                        \App\Models\Location::query()
+                            ->where('name', 'like', "%{$search}%")
+                            ->limit(10)
+                            ->pluck('name', 'id')
+                    )
+                    ->getOptionLabelUsing(fn ($value) => 
+                        \App\Models\Location::find($value)?->name
+                    )
+                    ->required()
+                    ->columnSpanFull(),
+                    
                 Textarea::make('remarks')
                     ->label('Remarks')
                     ->columnSpanFull()
@@ -63,37 +89,45 @@ class BorrowingLogResource extends Resource
                 TextColumn::make('inventoryRecord.serial_number')
                     ->label('Item')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
 
                 TextColumn::make('user.name')
                     ->label('Borrower')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
 
                 TextColumn::make('location.name')
                     ->label('Location')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
 
                 TextColumn::make('created_at')
                     ->label('Borrowed At')
                     ->date()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('returned_at')
                     ->label('Returned At')
                     ->date()
                     ->sortable()
-                    ->placeholder('Not Returned'),
+                    ->placeholder('Not Returned')
+                    ->toggleable(),
 
                 TextColumn::make('remarks')
                     ->label('Remarks')
                     ->wrap()
+                    ->toggleable()
                     ->limit(50),
             ])
             ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

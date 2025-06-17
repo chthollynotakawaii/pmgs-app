@@ -32,13 +32,19 @@ class UniformInventoryResource extends Resource
         return $form->schema([
             Select::make('inventory_record_id')
                 ->label('Inventory Item')
-                ->options(
-                    InventoryRecord::whereHas('category', function ($query) {
-                        $query->where('name', 'UNIFORM');
-                    })->pluck('serial_number', 'id')
-                )
-                ->required()
-                ->searchable(),
+                ->searchable()
+                ->getSearchResultsUsing(function (string $search) {
+                    return InventoryRecord::whereHas('category', fn ($query) =>
+                            $query->where('name', 'UNIFORM')
+                        )
+                        ->where('serial_number', 'like', "%{$search}%")
+                        ->limit(50)
+                        ->pluck('serial_number', 'id');
+                })
+                ->getOptionLabelUsing(function ($value) {
+                    return InventoryRecord::find($value)?->serial_number ?? 'N/A';
+                })
+                ->required(),
 
             Select::make('type')
                 ->label('Uniform Type')
@@ -112,17 +118,28 @@ class UniformInventoryResource extends Resource
 
             TextColumn::make('type')
                 ->sortable()
-                ->searchable(),
+                ->searchable()
+                ->toggleable(),
 
             TextColumn::make('size')
                 ->sortable()
-                ->searchable(),
+                ->searchable()
+                ->toggleable(),
 
             TextColumn::make('quantity')
                 ->label('In Stock')
-                ->sortable(),
+                ->sortable()
+                ->toggleable(),
+                
+            TextColumn::make('created_at')
+                ->label('Added At')
+                ->date()
+                ->sortable()
+                ->toggleable(),
         ])->actions([
             Tables\Actions\EditAction::make(),
+            Tables\Actions\ViewAction::make(),
+            Tables\Actions\DeleteAction::make(),
         ])->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),
         ]);

@@ -26,7 +26,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Tab;
+use Filament\Tables\Columns\ToggleColumn;
 
 
 class InventoryRecordResource extends Resource
@@ -90,18 +90,46 @@ class InventoryRecordResource extends Resource
                                         'strip' => 'Strip',
                                     ])
                                     ->searchable(),
-
                                 Select::make('brand_id')
                                     ->label('Brand')
-                                    ->options(fn () => Brand::all()->pluck('name', 'id'))
                                     ->searchable()
+                                    ->options(
+                                        Brand::query()
+                                            ->latest()
+                                            ->limit(5)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getSearchResultsUsing(fn (string $search) =>
+                                        Brand::query()
+                                            ->where('name', 'like', "%{$search}%")
+                                            ->limit(10)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getOptionLabelUsing(fn ($value) =>
+                                        Brand::find($value)?->name
+                                    )
                                     ->required(),
 
                                 Select::make('model_id')
                                     ->label('Model')
-                                    ->options(fn () => Models::all()->pluck('name', 'id'))
                                     ->searchable()
-                                    ->required(),
+                                    ->options(
+                                        Models::query()
+                                            ->latest()
+                                            ->limit(5)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getSearchResultsUsing(fn (string $search) => 
+                                        Models::query()
+                                            ->where('name', 'like', "%{$search}%")
+                                            ->limit(10)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getOptionLabelUsing(fn ($value) => 
+                                        Models::find($value)?->name
+                                    )
+                                    ->required()
+                                    ->columnSpanFull(),
 
                                 RichEditor::make('description')
                                     ->label('Description')
@@ -113,26 +141,87 @@ class InventoryRecordResource extends Resource
                             ->schema([
                                 Select::make('category_id')
                                     ->label('Category')
-                                    ->options(fn () => Category::all()->pluck('name', 'id'))
                                     ->searchable()
-                                    ->required(),
+                                    ->options(
+                                        Category::query()
+                                            ->latest()
+                                            ->limit(5)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getSearchResultsUsing(fn (string $search) => 
+                                        Category::query()
+                                            ->where('name', 'like', "%{$search}%")
+                                            ->limit(10)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getOptionLabelUsing(fn ($value) => 
+                                        Category::find($value)?->name
+                                    )
+                                    ->required()
+                                    ->columnSpanFull(),
 
                                 Select::make('department_id')
                                     ->label('Department')
-                                    ->options(fn () => Department::all()->pluck('name', 'id'))
                                     ->searchable()
-                                    ->required(),
+                                    ->options(
+                                        Department::query()
+                                            ->latest()
+                                            ->limit(5)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getSearchResultsUsing(fn (string $search) => 
+                                        Department::query()
+                                            ->where('name', 'like', "%{$search}%")
+                                            ->limit(10)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getOptionLabelUsing(fn ($value) => 
+                                        Department::find($value)?->name
+                                    )
+                                    ->required()
+                                    ->columnSpanFull(),
 
                                 Select::make('supplier_id')
                                     ->label('Supplier')
-                                    ->options(fn () => Supplier::all()->pluck('name', 'id'))
-                                    ->searchable(),
+                                    ->searchable()
+                                    ->options(
+                                        Supplier::query()
+                                            ->latest()
+                                            ->limit(5)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getSearchResultsUsing(fn (string $search) => 
+                                        Supplier::query()
+                                            ->where('name', 'like', "%{$search}%")
+                                            ->limit(10)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getOptionLabelUsing(fn ($value) => 
+                                        Supplier::find($value)?->name
+                                    )
+                                    ->required()
+                                    ->columnSpanFull(),
 
                                 Select::make('location_id')
                                     ->label('Location')
-                                    ->options(fn () => Location::all()->pluck('name', 'id'))
                                     ->searchable()
-                                    ->required(),
+                                    ->options(
+                                        Location::query()
+                                            ->latest()
+                                            ->limit(5)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getSearchResultsUsing(fn (string $search) => 
+                                        Location::query()
+                                            ->where('name', 'like', "%{$search}%")
+                                            ->limit(10)
+                                            ->pluck('name', 'id')
+                                    )
+                                    ->getOptionLabelUsing(fn ($value) => 
+                                        Location::find($value)?->name
+                                    )
+                                    ->required()
+                                    ->columnSpanFull(),
 
                                 Select::make('status')
                                     ->label('Status')
@@ -158,15 +247,15 @@ class InventoryRecordResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('serial_number')->label('Serial Number')->searchable()->sortable(),
-                TextColumn::make('qty')->label('Quantity')->sortable(),
-                TextColumn::make('unit')->label('Unit')->sortable(),
-                TextColumn::make('brand.name')->label('Brand')->sortable()->searchable(),
-                TextColumn::make('model.name')->label('Model')->sortable()->searchable(),
-                TextColumn::make('category.name')->label('Category')->sortable()->searchable(),
-                TextColumn::make('department.name')->label('Department')->sortable()->searchable(),
-                TextColumn::make('supplier.name')->label('Supplier')->sortable()->searchable(),
-                TextColumn::make('location.name')->label('Location')->sortable()->searchable(),
-                TextColumn::make('status')->label('Status')->sortable()->searchable()
+                TextColumn::make('qty')->label('Quantity')->sortable()->toggleable(),
+                TextColumn::make('unit')->label('Unit')->sortable()->toggleable(),
+                TextColumn::make('brand.name')->label('Brand')->sortable()->searchable()->toggleable(),
+                TextColumn::make('model.name')->label('Model')->sortable()->searchable()->toggleable(),
+                TextColumn::make('category.name')->label('Category')->sortable()->searchable()->toggleable(),
+                TextColumn::make('department.name')->label('Department')->sortable()->searchable()->toggleable(),
+                TextColumn::make('supplier.name')->label('Supplier')->sortable()->searchable()->toggleable(),
+                TextColumn::make('location.name')->label('Location')->sortable()->searchable()->toggleable(),
+                TextColumn::make('status')->label('Status')->sortable()->searchable()->toggleable()
                 ->badge()
                 ->color(fn ($state) => match ($state) {
                     'Functional' => 'success',
@@ -175,8 +264,13 @@ class InventoryRecordResource extends Resource
                     'On Maintenance' => 'info',
                     default => 'secondary',
                 }),
-                TextColumn::make('created_at')->label('Created At')->dateTime()->sortable(),
-                TextColumn::make('updated_at')->label('Updated At')->dateTime()->sortable(),
+                ToggleColumn::make('borrowed')
+                ->label('Borrowed')
+                ->sortable()
+                ->toggleable(),
+
+                TextColumn::make('created_at')->label('Date')->dateTime()->sortable()->toggleable(),
+                TextColumn::make('updated_at')->label('Updated At')->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('brand_id')->label('Brand')->relationship('brand', 'name'),
@@ -202,6 +296,7 @@ class InventoryRecordResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
                 ViewAction::make(),
                 Tables\Actions\Action::make('generate_qr')
                     ->label('QR Code')
@@ -228,7 +323,6 @@ class InventoryRecordResource extends Resource
             'index' => Pages\ListInventoryRecords::route('/'),
             'create' => Pages\CreateInventoryRecord::route('/create'),
             'edit' => Pages\EditInventoryRecord::route('/{record}/edit'),
-            'view' => Pages\ViewInventoryRecord::route('/{record}'),
         ];
     }
 }
