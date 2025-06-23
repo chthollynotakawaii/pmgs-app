@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedInteger('qty');
             $table->string('unit');
-            $table->text('description')->nullable();
+            $table->longText('description')->nullable();
             $table->foreignId('brand_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('model_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('serial_number')->unique();
@@ -25,6 +25,7 @@ return new class extends Migration
             $table->foreignId('department_id')->constrained()->cascadeOnDelete();
             $table->foreignId('location_id')->constrained()->cascadeOnDelete();
             $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
+            $table->boolean('borrowed')->default(false);
             $table->timestamps();
             $table->softDeletes(); // optional
         });

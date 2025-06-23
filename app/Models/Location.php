@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 
 class Location extends Model
 {
+    public $timestamps = true;
     use HasFactory, Notifiable;
     protected $fillable = [
         'name',

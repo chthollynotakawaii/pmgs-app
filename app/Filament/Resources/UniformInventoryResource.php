@@ -7,16 +7,13 @@ use App\Models\UniformInventory;
 use App\Models\InventoryRecord;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Validation\Rule;
-use Filament\Forms\Get;
-
-use function Pest\Laravel\options;
 
 class UniformInventoryResource extends Resource
 {
@@ -27,12 +24,28 @@ class UniformInventoryResource extends Resource
     protected static ?int $navigationSort = 3;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = UniformInventory::count();
+        $totalQty = UniformInventory::sum('quantity');
+        return "{$count} | {$totalQty}";
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
             Select::make('inventory_record_id')
                 ->label('Inventory Item')
                 ->searchable()
+                ->options(
+                    InventoryRecord::query()
+                        ->whereHas('category', fn ($query) =>
+                            $query->where('name', 'UNIFORM')
+                        )
+                        ->latest()
+                        ->limit(10)
+                        ->pluck('serial_number', 'id')
+                )
                 ->getSearchResultsUsing(function (string $search) {
                     return InventoryRecord::whereHas('category', fn ($query) =>
                             $query->where('name', 'UNIFORM')
@@ -72,14 +85,16 @@ class UniformInventoryResource extends Resource
                 ->searchable()
                 ->required(),
 
-           TextInput::make('quantity')
+            TextInput::make('quantity')
+                ->label('Quantity')
                 ->numeric()
                 ->required()
                 ->minValue(1)
+                ->default(1)
                 ->rule(function (Get $get) {
                     return function (string $attribute, $value, \Closure $fail) use ($get) {
                         $inventoryRecordId = $get('inventory_record_id');
-                        $currentRecordId = $get('id'); // in case of update
+                        $currentRecordId = $get('id');
 
                         if (!$inventoryRecordId) {
                             return;
@@ -104,7 +119,6 @@ class UniformInventoryResource extends Resource
                         }
                     };
                 }),
-
         ]);
     }
 
@@ -130,17 +144,19 @@ class UniformInventoryResource extends Resource
                 ->label('In Stock')
                 ->sortable()
                 ->toggleable(),
-                
+
             TextColumn::make('created_at')
                 ->label('Added At')
                 ->date()
                 ->sortable()
                 ->toggleable(),
-        ])->actions([
+        ])
+        ->actions([
             Tables\Actions\EditAction::make(),
             Tables\Actions\ViewAction::make(),
             Tables\Actions\DeleteAction::make(),
-        ])->bulkActions([
+        ])
+        ->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),
         ]);
     }

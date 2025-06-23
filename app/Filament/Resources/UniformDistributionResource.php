@@ -32,8 +32,25 @@ class UniformDistributionResource extends Resource
             Select::make('uniform_inventory_id')
                 ->label('Uniform')
                 ->searchable()
+                ->options(
+                    UniformInventory::with('inventoryRecord')
+                        ->where('quantity', '>', 0)
+                        ->whereHas('inventoryRecord.category', fn ($query) =>
+                            $query->where('name', 'UNIFORM')
+                        )
+                        ->latest()
+                        ->limit(10)
+                        ->get()
+                        ->mapWithKeys(function ($item) {
+                            $serial = $item->inventoryRecord?->serial_number ?? 'N/A';
+                            return [
+                                $item->id => "SN: {$serial} - {$item->type} - {$item->size} - (Stock: {$item->quantity})"
+                            ];
+                        })
+                )
                 ->getSearchResultsUsing(function (string $search) {
                     return UniformInventory::with('inventoryRecord')
+                        ->where('quantity', '>', 0)
                         ->whereHas('inventoryRecord', fn ($q) =>
                             $q->where('serial_number', 'like', "%{$search}%")
                         )
@@ -48,12 +65,13 @@ class UniformDistributionResource extends Resource
                 })
                 ->getOptionLabelUsing(function ($value) {
                     $item = UniformInventory::with('inventoryRecord')->find($value);
-                    if (!$item) return null;
+                    if (!$item || $item->quantity <= 0) return null;
 
                     $serial = $item->inventoryRecord?->serial_number ?? 'N/A';
                     return "SN: {$serial} - {$item->type} - {$item->size} - (Stock: {$item->quantity})";
                 })
                 ->required(),
+
 
             TextInput::make('student_id')
                 ->label('Student ID')
@@ -66,7 +84,21 @@ class UniformDistributionResource extends Resource
 
             Select::make('department_id')
                 ->label('Department')
-                ->options(Department::all()->pluck('name', 'id'))
+                ->options(
+                    Department::query()
+                        ->latest()
+                        ->limit(5)
+                        ->pluck('name', 'id')
+                )
+                ->getSearchResultsUsing(fn (string $search) =>
+                    Department::query()
+                        ->where('name', 'like', "%{$search}%")
+                        ->limit(10)
+                        ->pluck('name', 'id')
+                )
+                ->getOptionLabelUsing(fn ($value) =>
+                    Department::find($value)?->name
+                )
                 ->required()
                 ->searchable(),
 
@@ -79,6 +111,7 @@ class UniformDistributionResource extends Resource
                 ->numeric()
                 ->required()
                 ->minValue(1)
+                ->default(1)
                 ->label('Quantity')
                 ->rules([
                     fn (Get $get) => function (string $attribute, $value, $fail) use ($get) {
@@ -91,7 +124,9 @@ class UniformDistributionResource extends Resource
                     },
                 ]),
 
-            Textarea::make('remarks')
+            TextArea::make('remarks')
+                ->label('Remarks')
+                ->columnSpanFull()
                 ->nullable(),
         ]);
     }
@@ -148,7 +183,7 @@ class UniformDistributionResource extends Resource
 
                 TextColumn::make('created_at')
                     ->label('Date')
-                    ->dateTime()
+                    ->date()
                     ->sortable()
                     ->toggleable(),
                 

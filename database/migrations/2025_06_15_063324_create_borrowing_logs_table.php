@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('borrowing_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('inventory_record_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); // person borrowing
-            $table->foreignId('location_id')->constrained()->cascadeOnDelete(); // where it was borrowed to
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); 
+            $table->foreignId('location_id')->constrained()->cascadeOnDelete();
+            $table->integer('quantity'); 
             $table->dateTime('returned_at')->nullable();
             $table->string('remarks')->nullable()->default('borrowed');
             $table->timestamps();

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UniformInventory extends Model
 {   
+    public $timestamps = true;
     protected $fillable = [
         'inventory_record_id',
         'type',

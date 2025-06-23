@@ -3,17 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SupplierResource\Pages;
-use App\Filament\Resources\SupplierResource\RelationManagers;
-use App\Models\Supplier;
-use Filament\Forms;
+use App\Models\Supplier;;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Set;
 
 class SupplierResource extends Resource
 {
@@ -41,9 +38,19 @@ class SupplierResource extends Resource
                     ->label('Phone')
                     ->tel()
                     ->required()
-                    ->telRegex('/^\+63\s\d{3}-\d{3}-\d{4}$/')
+                    ->maxLength(20)
                     ->helperText('Format: +63 912-345-6789')
-                    ->maxLength(20),
+                    ->afterStateUpdated(function (Set $set, ?string $state) {
+                        $cleaned = preg_replace('/\D+/', '', $state); // Remove non-digits
+
+                        if (strlen($cleaned) >= 10) {
+                            $formatted = '+63 ' . substr($cleaned, -10, 3) . '-' . substr($cleaned, -7, 3) . '-' . substr($cleaned, -4);
+                            $set('phone', $formatted);
+                        }
+                    })
+                    ->dehydrateStateUsing(fn (?string $state) => $state),
+
+
                 
                 TextInput::make('address')
                     ->label('Address')

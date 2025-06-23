@@ -3,12 +3,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
 class InventoryRecord extends Model
 {
-    use HasFactory, Notifiable;
+    public $timestamps = true; // Using recorded_at instead of created_at/updated_at
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'serial_number',

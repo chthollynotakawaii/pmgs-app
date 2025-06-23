@@ -10,7 +10,6 @@ use App\Models\Category;
 use App\Models\Department;
 use App\Models\Supplier;
 use App\Models\Location;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -18,15 +17,18 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
 use Illuminate\Support\Str;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Tabs;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Actions\ExportAction;
+use App\Filament\Exports\InventoryRecordExporter;
 
 
 class InventoryRecordResource extends Resource
@@ -41,9 +43,10 @@ class InventoryRecordResource extends Resource
         return $form
             ->schema([
                 Tabs::make('Inventory Form')
-                ->columnSpanFull()
+                    ->columnSpanFull()
                     ->tabs([
                         Tabs\Tab::make('Inventory Details')
+                            ->columns(2)
                             ->schema([
                                 TextInput::make('serial_number')
                                     ->label('Serial Number')
@@ -51,14 +54,17 @@ class InventoryRecordResource extends Resource
                                     ->disabled()
                                     ->required()
                                     ->dehydrated()
-                                    ->extraInputAttributes(['class' => 'text-center']),
+                                    ->extraInputAttributes(['class' => 'text-center'])
+                                    ->columnSpanFull(),
 
                                 TextInput::make('qty')
                                     ->label('Quantity')
                                     ->numeric()
                                     ->integer()
                                     ->minValue(1)
-                                    ->required(),
+                                    ->required()
+                                    ->default(1)
+                                    ->columnSpan(1),
 
                                 Select::make('unit')
                                     ->label('Unit')
@@ -89,14 +95,16 @@ class InventoryRecordResource extends Resource
                                         'roll' => 'Roll',
                                         'strip' => 'Strip',
                                     ])
-                                    ->searchable(),
+                                    ->searchable()
+                                    ->columnSpan(1),
+
                                 Select::make('brand_id')
                                     ->label('Brand')
                                     ->searchable()
                                     ->options(
                                         Brand::query()
                                             ->latest()
-                                            ->limit(5)
+                                            ->limit(10)
                                             ->pluck('name', 'id')
                                     )
                                     ->getSearchResultsUsing(fn (string $search) =>
@@ -108,7 +116,8 @@ class InventoryRecordResource extends Resource
                                     ->getOptionLabelUsing(fn ($value) =>
                                         Brand::find($value)?->name
                                     )
-                                    ->required(),
+                                    ->required()
+                                    ->columnSpan(1),
 
                                 Select::make('model_id')
                                     ->label('Model')
@@ -116,7 +125,7 @@ class InventoryRecordResource extends Resource
                                     ->options(
                                         Models::query()
                                             ->latest()
-                                            ->limit(5)
+                                            ->limit(10)
                                             ->pluck('name', 'id')
                                     )
                                     ->getSearchResultsUsing(fn (string $search) => 
@@ -129,15 +138,16 @@ class InventoryRecordResource extends Resource
                                         Models::find($value)?->name
                                     )
                                     ->required()
-                                    ->columnSpanFull(),
+                                    ->columnSpan(1),
 
-                                RichEditor::make('description')
+                                Textarea::make('description')
                                     ->label('Description')
+                                    ->columnSpanFull()
                                     ->placeholder('Enter a detailed description of the inventory item.')
-                                    ->disableToolbarButtons(['attachFiles', 'codeBlock', 'table']),
                             ]),
 
                         Tabs\Tab::make('Classification Info')
+                            ->columns(2)
                             ->schema([
                                 Select::make('category_id')
                                     ->label('Category')
@@ -145,7 +155,7 @@ class InventoryRecordResource extends Resource
                                     ->options(
                                         Category::query()
                                             ->latest()
-                                            ->limit(5)
+                                            ->limit(10)
                                             ->pluck('name', 'id')
                                     )
                                     ->getSearchResultsUsing(fn (string $search) => 
@@ -158,7 +168,7 @@ class InventoryRecordResource extends Resource
                                         Category::find($value)?->name
                                     )
                                     ->required()
-                                    ->columnSpanFull(),
+                                    ->columnSpan(1),
 
                                 Select::make('department_id')
                                     ->label('Department')
@@ -166,7 +176,7 @@ class InventoryRecordResource extends Resource
                                     ->options(
                                         Department::query()
                                             ->latest()
-                                            ->limit(5)
+                                            ->limit(10)
                                             ->pluck('name', 'id')
                                     )
                                     ->getSearchResultsUsing(fn (string $search) => 
@@ -179,7 +189,7 @@ class InventoryRecordResource extends Resource
                                         Department::find($value)?->name
                                     )
                                     ->required()
-                                    ->columnSpanFull(),
+                                    ->columnSpan(1),
 
                                 Select::make('supplier_id')
                                     ->label('Supplier')
@@ -187,7 +197,7 @@ class InventoryRecordResource extends Resource
                                     ->options(
                                         Supplier::query()
                                             ->latest()
-                                            ->limit(5)
+                                            ->limit(10)
                                             ->pluck('name', 'id')
                                     )
                                     ->getSearchResultsUsing(fn (string $search) => 
@@ -200,7 +210,7 @@ class InventoryRecordResource extends Resource
                                         Supplier::find($value)?->name
                                     )
                                     ->required()
-                                    ->columnSpanFull(),
+                                    ->columnSpan(1),
 
                                 Select::make('location_id')
                                     ->label('Location')
@@ -208,7 +218,7 @@ class InventoryRecordResource extends Resource
                                     ->options(
                                         Location::query()
                                             ->latest()
-                                            ->limit(5)
+                                            ->limit(10)
                                             ->pluck('name', 'id')
                                     )
                                     ->getSearchResultsUsing(fn (string $search) => 
@@ -221,7 +231,7 @@ class InventoryRecordResource extends Resource
                                         Location::find($value)?->name
                                     )
                                     ->required()
-                                    ->columnSpanFull(),
+                                    ->columnSpan(1),
 
                                 Select::make('status')
                                     ->label('Status')
@@ -229,14 +239,14 @@ class InventoryRecordResource extends Resource
                                         'Functional' => 'Functional',
                                         'Defective' => 'Defective',
                                         'Damaged' => 'Damaged',
-                                        'On Maintenance' => 'On Maintenance',
+                                        'In Maintenance' => 'In Maintenance',
                                     ])
-                                    ->required(),
+                                    ->columnSpanFull(),
 
-                                RichEditor::make('remarks')
+                                Textarea::make('remarks')
                                     ->label('Remarks')
+                                    ->columnSpanFull()
                                     ->placeholder('Enter any additional remarks or notes about the inventory item.')
-                                    ->disableToolbarButtons(['attachFiles', 'codeBlock', 'table']),
                             ]),
                     ]),
             ]);
@@ -261,7 +271,7 @@ class InventoryRecordResource extends Resource
                     'Functional' => 'success',
                     'Defective' => 'danger',
                     'Damaged' => 'warning',
-                    'On Maintenance' => 'info',
+                    'In Maintenance' => 'info',
                     default => 'secondary',
                 }),
                 ToggleColumn::make('borrowed')
@@ -273,15 +283,17 @@ class InventoryRecordResource extends Resource
                 TextColumn::make('updated_at')->label('Updated At')->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
+                TrashedFilter::make(),
                 SelectFilter::make('brand_id')->label('Brand')->relationship('brand', 'name'),
                 SelectFilter::make('model_id')->label('Model')->relationship('model', 'name'),
                 SelectFilter::make('category_id')->label('Category')->relationship('category', 'name'),
                 SelectFilter::make('department_id')->label('Department')->relationship('department', 'name'),
                 SelectFilter::make('location_id')->label('Location')->relationship('location', 'name'),
                 SelectFilter::make('status')->options([
-                    'draft' => 'Draft',
-                    'reviewing' => 'Reviewing',
-                    'published' => 'Published',
+                    'Functional' => 'Functional',
+                    'Defective' => 'Defective',
+                    'Damaged' => 'Damaged',
+                    'In Maintenance' => 'In Maintenance',
                 ])->label('Status'),
                 Filter::make('created_at')
                     ->form([
@@ -304,17 +316,31 @@ class InventoryRecordResource extends Resource
                     ->action(function ($record) {
                         return redirect()->route('inventory.qr', ['id' => $record->id]);
                     }),
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+
+            ])
+            ->headerActions([
+                ExportAction::make()->Exporter(InventoryRecordExporter::class)->label('Export Inventory Records'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            \App\Filament\Resources\InventoryRecordResource\RelationManagers\BorrowingLogsRelationManager::class,
+        ];
+    }
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->withoutGlobalScopes([
+            \Illuminate\Database\Eloquent\SoftDeletingScope::class,
+        ]);
     }
 
     public static function getPages(): array

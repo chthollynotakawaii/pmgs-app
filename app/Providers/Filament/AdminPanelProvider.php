@@ -10,16 +10,13 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use App\Filament\Resources\Auth\CustomLogin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -31,7 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->brandName('PMGS')
             ->favicon(asset('images/logo.png'))
-            ->login()
+            ->login(CustomLogin::class) // Custom login page
             ->maxContentWidth('full') // or 'screen' for true full width
             ->topNavigation()
             ->colors([
@@ -42,16 +39,12 @@ class AdminPanelProvider extends PanelProvider
                 'warning' => Color::Yellow,
                 'info' => Color::Cyan,
             ])
+            ->databaseNotifications()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-                Pages\Dashboard::class,
-            ])
+            ->pages([])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
-            ])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 
 class UniformDistribution extends Model
 {
+    public $timestamps = true;
     protected $fillable = [
         'uniform_inventory_id',
         'student_id',
@@ -20,7 +21,12 @@ class UniformDistribution extends Model
 
     protected static function booted()
     {
-
+        static::created(function ($distribution) {
+            $inventory = UniformInventory::find($distribution->uniform_inventory_id);
+            if ($inventory && $inventory->quantity >= $distribution->quantity) {
+                $inventory->decrement('quantity', $distribution->quantity);
+            }
+        });
     }
 
     public function uniformInventory(): BelongsTo
@@ -30,7 +36,7 @@ class UniformDistribution extends Model
 
     public function inventoryRecord(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\InventoryRecord::class);
+        return $this->belongsTo(InventoryRecord::class);
     }
 
     public function department(): BelongsTo

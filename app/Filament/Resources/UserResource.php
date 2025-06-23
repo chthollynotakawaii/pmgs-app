@@ -13,13 +13,13 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-    protected static ?string $navigationGroup = 'Admin Panel';
 
     protected static ?string $navigationIcon = 'heroicon-s-users';
 
@@ -30,10 +30,16 @@ class UserResource extends Resource
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('email')
-                    ->email()
+                TextInput::make('username')
                     ->required()
                     ->maxLength(255),
+                Select::make('role')
+                    ->options([
+                        'admin' => 'Admin',
+                        'user' => 'User',
+                    ])
+                    ->default('user')
+                    ->required(),
                 TextInput::make('password')
                     ->password()
                     ->required()
@@ -48,10 +54,16 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
-                TextColumn::make('email')
+                    ->sortable()
+                    ->label('Name'),
+                TextColumn::make('username')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->label('Username'),
+                TextColumn::make('role')
+                    ->searchable()
+                    ->sortable()
+                    ->label('User Role'),
                 TextColumn::make('created_at')
                     ->dateTime(),
                 TextColumn::make('updated_at')
@@ -62,6 +74,8 @@ class UserResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
