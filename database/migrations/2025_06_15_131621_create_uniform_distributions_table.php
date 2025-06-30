@@ -13,14 +13,11 @@ return new class extends Migration
     {
         Schema::create('uniform_distributions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('uniform_inventory_id')->constrained()->cascadeOnDelete();
-            $table->integer('student_id')->nullable(); // Nullable for staff distributions
-            $table->string('student_name')->nullable(); // Nullable for staff distributions
-            $table->foreignId('department_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('student_identification_id')->constrained()->cascadeOnDelete();// Nullable for staff distributions
             $table->string('receipt_number')->nullable(); // Nullable for staff distributions
-            $table->unsignedInteger('quantity')->default(1);
-            $table->text('remarks')->nullable();
+            $table->json('sizes_id')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
     }

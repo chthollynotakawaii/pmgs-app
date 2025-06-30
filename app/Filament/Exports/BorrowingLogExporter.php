@@ -14,7 +14,23 @@ class BorrowingLogExporter extends Exporter
     public static function getColumns(): array
     {
         return [
-            //
+            ExportColumn::make('id')->label('ID'),
+
+            ExportColumn::make('inventoryRecord.temp_serial')->label('Serial Number'),
+            ExportColumn::make('inventoryRecord.unit')->label('Unit'),
+            ExportColumn::make('inventoryRecord.description')->label('Description'),
+            ExportColumn::make('inventoryRecord.brand.name')->label('Brand'),
+            ExportColumn::make('inventoryRecord.model.name')->label('Model'),
+            ExportColumn::make('inventoryRecord.category.name')->label('Category'),
+            ExportColumn::make('inventoryRecord.department.name')->label('Department From'),
+            ExportColumn::make('inventoryRecord.location.name')->label('Location From'),
+            ExportColumn::make('user.name')->label('Borrower'),
+            ExportColumn::make('user.department.name')->label("Borrower's Department"),
+            ExportColumn::make('location.name')->label('Location To'),
+            ExportColumn::make('quantity')->label('Quantity'),
+            ExportColumn::make('returned_at')->label('Returned At'),
+            ExportColumn::make('created_at')->label('Borrowed At'),
+            ExportColumn::make('updated_at')->label('Updated At'),
         ];
     }
 

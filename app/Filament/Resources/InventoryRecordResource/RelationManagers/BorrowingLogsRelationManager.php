@@ -5,6 +5,7 @@ namespace App\Filament\Resources\InventoryRecordResource\RelationManagers;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 
 class BorrowingLogsRelationManager extends RelationManager
@@ -19,10 +20,11 @@ class BorrowingLogsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('id')->label('Log ID')->sortable(),
                 TextColumn::make('user.name')->label('User')->sortable()->searchable(),
+                TextColumn::make('user.department.name')->label('Department')->sortable()->searchable(),
                 TextColumn::make('location.name')->label('Location')->sortable()->searchable(),
-                TextColumn::make('created_at')->label('Borrowed At')->dateTime()->sortable(),
+                TextColumn::make('recorded_at')->label('Borrowed At')->dateTime()->sortable(),
                 TextColumn::make('returned_at')->label('Returned At')->dateTime()->sortable()->placeholder('Not Returned'),
-                TextColumn::make('remarks')->label('Remarks')->limit(30),
+                ToggleColumn::make('remarks')->label('Remarks'),
             ])
             ->defaultSort('created_at', 'desc');
     }

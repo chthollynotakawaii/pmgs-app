@@ -19,13 +19,15 @@ return new class extends Migration
             $table->foreignId('brand_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('model_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('serial_number')->unique();
+            $table->string('temp_serial')->nullable();
             $table->string('remarks')->nullable();
-            $table->string('status')->index();
-            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('department_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('location_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
+            $table->string('status')->nullable()->index();
+            $table->foreignId('category_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('department_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('location_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained()->cascadeOnDelete();
             $table->boolean('borrowed')->default(false);
+            $table->dateTime('recorded_at')->nullable();
             $table->timestamps();
             $table->softDeletes(); // optional
         });

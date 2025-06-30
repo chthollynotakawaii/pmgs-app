@@ -14,18 +14,23 @@ class InventoryRecordExporter extends Exporter
     public static function getColumns(): array
     {
         return [
-            ExportColumn::make('qty'),
-            ExportColumn::make('unit'),
-            ExportColumn::make('description'),
-            ExportColumn::make('brand_id')->label('Brand'),
-            ExportColumn::make('model_id')->label('Model'),
-            ExportColumn::make('serial_number'),
-            ExportColumn::make('remarks'),
-            ExportColumn::make('status'),
-            ExportColumn::make('department_id')->label('Department'),
-            ExportColumn::make('location_id')->label('Location'),
-            ExportColumn::make('supplier_id')->label('Supplier'),
-            ExportColumn::make('created_at'),
+            ExportColumn::make('id')->label('ID'),
+            ExportColumn::make('qty')->label('Quantity'),
+            ExportColumn::make('unit')->label('Unit'),
+            ExportColumn::make('description')->label('Description'),
+            ExportColumn::make('brand.name')->label('Brand'),
+            ExportColumn::make('model.name')->label('Model'),
+            ExportColumn::make('temp_serial')->label('Serial Number'),
+            ExportColumn::make('remarks')->label('Remarks'),
+            ExportColumn::make('status')->label('Status'),
+            ExportColumn::make('category.name')->label('Category'),
+            ExportColumn::make('department.name')->label('Department'),
+            ExportColumn::make('location.name')->label('Location'),
+            ExportColumn::make('supplier.name')->label('Supplier'),
+            ExportColumn::make('borrowed')->label('Borrowed'),
+            ExportColumn::make('recorded_at')->label('Date Recorded'),
+            ExportColumn::make('created_at')->label('Created At'),
+            ExportColumn::make('updated_at')->label('Updated At'),
         ];
     }
 

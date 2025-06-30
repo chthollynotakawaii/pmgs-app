@@ -24,8 +24,7 @@ class BrandResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Brand')
-                    ->required()
-                    ->maxLength(255),
+                    ->required(),
             ]);
     }
 

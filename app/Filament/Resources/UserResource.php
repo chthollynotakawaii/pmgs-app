@@ -16,6 +16,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
+use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
@@ -29,10 +30,9 @@ class UserResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->required()
-                    ->maxLength(255),
+                    ->columnSpanFull(),
                 TextInput::make('username')
-                    ->required()
-                    ->maxLength(255),
+                    ->required(),
                 Select::make('role')
                     ->options([
                         'admin' => 'Admin',
@@ -40,13 +40,24 @@ class UserResource extends Resource
                     ])
                     ->default('user')
                     ->required(),
-                TextInput::make('password')
-                    ->password()
-                    ->required()
-                    ->revealable()
-                    ->maxLength(255),
+
+
+TextInput::make('password')
+    ->label('Password')
+    ->password()
+    ->revealable()
+    ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
+    ->required(fn (string $context): bool => $context === 'create')
+    ->dehydrated(fn ($state) => filled($state)),
+
+                Select::make('department_id')
+                    ->label('Department')
+                    ->relationship('department', 'name', fn ($query) => $query->orderBy('name'))
+                    ->searchable()
+                    ->preload(),
+    
             ]);
-    }
+        }
 
     public static function table(Table $table): Table
     {
@@ -55,19 +66,28 @@ class UserResource extends Resource
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->label('Name'),
+                    ->label('Name')
+                    ->toggleable(),
                 TextColumn::make('username')
                     ->searchable()
                     ->sortable()
-                    ->label('Username'),
+                    ->label('Username')
+                    ->toggleable(),
                 TextColumn::make('role')
                     ->searchable()
                     ->sortable()
-                    ->label('User Role'),
+                    ->label('User Role')
+                    ->toggleable(),
+                TextColumn::make('department.name')
+                    ->label('Department')
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('created_at')
-                    ->dateTime(),
+                    ->dateTime()
+                    ->toggleable(),
                 TextColumn::make('updated_at')
-                    ->dateTime(),
+                    ->dateTime()
+                    ->toggleable(),
             ])
             ->filters([
                 //

@@ -3,229 +3,162 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UniformDistributionResource\Pages;
-use App\Models\Department;
 use App\Models\UniformDistribution;
-use App\Models\UniformInventory;
+use App\Models\UniformSize;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Filters\Filter;
-use Filament\Forms\Get;
+use Filament\Forms\Components\DatePicker;
 
 class UniformDistributionResource extends Resource
 {
     protected static ?string $model = UniformDistribution::class;
     protected static ?string $navigationGroup = 'Inventory Management';
-    protected static ?int $navigationSort = 4;
-    protected static ?string $navigationIcon = 'heroicon-o-equals';
+    protected static ?int $navigationSort = 5;
+    protected static ?string $navigationIcon = 'heroicon-s-identification';
 
     public static function form(Form $form): Form
     {
-        return $form->schema([
-            Select::make('uniform_inventory_id')
-                ->label('Uniform')
-                ->searchable()
-                ->options(
-                    UniformInventory::with('inventoryRecord')
-                        ->where('quantity', '>', 0)
-                        ->whereHas('inventoryRecord.category', fn ($query) =>
-                            $query->where('name', 'UNIFORM')
-                        )
-                        ->latest()
-                        ->limit(10)
-                        ->get()
-                        ->mapWithKeys(function ($item) {
-                            $serial = $item->inventoryRecord?->serial_number ?? 'N/A';
-                            return [
-                                $item->id => "SN: {$serial} - {$item->type} - {$item->size} - (Stock: {$item->quantity})"
-                            ];
-                        })
-                )
-                ->getSearchResultsUsing(function (string $search) {
-                    return UniformInventory::with('inventoryRecord')
-                        ->where('quantity', '>', 0)
-                        ->whereHas('inventoryRecord', fn ($q) =>
-                            $q->where('serial_number', 'like', "%{$search}%")
-                        )
-                        ->limit(50)
-                        ->get()
-                        ->mapWithKeys(function ($item) {
-                            $serial = $item->inventoryRecord?->serial_number ?? 'N/A';
-                            return [
-                                $item->id => "SN: {$serial} - {$item->type} - {$item->size} - (Stock: {$item->quantity})"
-                            ];
-                        });
-                })
-                ->getOptionLabelUsing(function ($value) {
-                    $item = UniformInventory::with('inventoryRecord')->find($value);
-                    if (!$item || $item->quantity <= 0) return null;
+        return $form
+            ->schema([
+                Select::make('student_identification_id')
+                    ->label('Student ID')
+                    ->options(UniformSize::query()
+                        ->orderBy('student_identification')
+                        ->pluck('student_identification', 'id'))
+                    ->searchable()
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, Set $set) {
+                        $uniformSize = UniformSize::find($state);
 
-                    $serial = $item->inventoryRecord?->serial_number ?? 'N/A';
-                    return "SN: {$serial} - {$item->type} - {$item->size} - (Stock: {$item->quantity})";
-                })
-                ->required(),
-
-
-            TextInput::make('student_id')
-                ->label('Student ID')
-                ->numeric()
-                ->required(),
-
-            TextInput::make('student_name')
-                ->label('Student Name')
-                ->required(),
-
-            Select::make('department_id')
-                ->label('Department')
-                ->options(
-                    Department::query()
-                        ->latest()
-                        ->limit(5)
-                        ->pluck('name', 'id')
-                )
-                ->getSearchResultsUsing(fn (string $search) =>
-                    Department::query()
-                        ->where('name', 'like', "%{$search}%")
-                        ->limit(10)
-                        ->pluck('name', 'id')
-                )
-                ->getOptionLabelUsing(fn ($value) =>
-                    Department::find($value)?->name
-                )
-                ->required()
-                ->searchable(),
-
-            TextInput::make('receipt_number')
-                ->label('Receipt Number')
-                ->numeric()
-                ->required(),
-
-            TextInput::make('quantity')
-                ->numeric()
-                ->required()
-                ->minValue(1)
-                ->default(1)
-                ->label('Quantity')
-                ->rules([
-                    fn (Get $get) => function (string $attribute, $value, $fail) use ($get) {
-                        $uniformInventoryId = $get('uniform_inventory_id');
-                        $available = \App\Models\UniformInventory::find($uniformInventoryId)?->quantity ?? 0;
-
-                        if ($value > $available) {
-                            $fail("Not enough stock. Available quantity: {$available}.");
+                        if (! $uniformSize || ! is_array($uniformSize->sizes)) {
+                            return;
                         }
-                    },
-                ]),
 
-            TextArea::make('remarks')
-                ->label('Remarks')
-                ->columnSpanFull()
-                ->nullable(),
-        ]);
+                        $set('sizes_id', collect($uniformSize->sizes)->values()->toArray());
+                    })
+                    ->required(),
+
+                TextInput::make('receipt_number')
+                    ->label('Receipt Number')
+                    ->required(),
+
+                CheckboxList::make('sizes_id')
+                    ->label('Uniform Sizes')
+                    ->options(function (Get $get) {
+                        $uniformSize = UniformSize::find($get('student_identification_id'));
+
+                        if (! $uniformSize || ! is_array($uniformSize->sizes)) {
+                            return [];
+                        }
+
+                        return collect($uniformSize->sizes)->mapWithKeys(function ($size, $index) {
+                            $label = "Type: {$size['uniform_type']} | Size: {$size['size']} | Quantity: {$size['quantity']}";
+                            return [$index => $label];
+                        })->toArray();
+                    })
+                    ->columns(1)
+                    ->required(),
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('uniformInventory.type')
-                    ->label('Type')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
-
-                TextColumn::make('uniformInventory.size')
-                    ->label('Size')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
-
-                TextColumn::make('uniformInventory.inventoryRecord.serial_number')
-                    ->label('Serial Number')
-                    ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('student_id')
+                TextColumn::make('studentIdentification.student_identification')
                     ->label('Student ID')
-                    ->searchable()
                     ->sortable()
+                    ->searchable()
                     ->toggleable(),
 
-                TextColumn::make('student_name')
-                    ->label('Name')
-                    ->searchable()
+                TextColumn::make('studentIdentification.student_name')
+                    ->label('Student Name')
                     ->sortable()
+                    ->searchable()
                     ->toggleable(),
 
-                TextColumn::make('department.name')
+                TextColumn::make('studentIdentification.department.name')
                     ->label('Department')
-                    ->searchable()
                     ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('studentIdentification.course.name')
+                    ->label('Course')
+                    ->sortable()
+                    ->searchable()
                     ->toggleable(),
 
                 TextColumn::make('receipt_number')
                     ->label('Receipt Number')
+                    ->sortable()
                     ->searchable()
-                    ->sortable()
-                    ->toggleable(),
-
-                TextColumn::make('quantity')
-                    ->label('Quantity')
-                    ->sortable()
                     ->toggleable(),
 
                 TextColumn::make('created_at')
-                    ->label('Date')
+                    ->label('Date Issued')
                     ->date()
                     ->sortable()
                     ->toggleable(),
-                
-                TextColumn::make('updated_at')
-                    ->label('Updated At')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
-
-                TextColumn::make('remarks')
-                    ->label('Remarks')
-                    ->toggleable(),
             ])
             ->filters([
-                SelectFilter::make('uniform_inventory_id')
-                    ->label('Uniform Type')
-                    ->options(UniformInventory::all()->pluck('type', 'id')),
+                TrashedFilter::make(),
 
                 SelectFilter::make('department_id')
                     ->label('Department')
-                    ->options(Department::all()->pluck('name', 'id')),
-
+                    ->relationship('studentIdentification.department', 'name'),
+    
+                SelectFilter::make('course_id')
+                    ->label('Course')
+                    ->relationship('studentIdentification.course', 'name'),
+    
+                SelectFilter::make('student_identification_id')
+                    ->label('Student')
+                    ->relationship('studentIdentification', 'student_name')
+                    ->searchable(),
+    
                 Filter::make('created_at')
-                    ->label('Date Range')
                     ->form([
-                        Forms\Components\DatePicker::make('created_from')->label('From'),
-                        Forms\Components\DatePicker::make('created_until')->label('To'),
+                        DatePicker::make('from')->label('From'),
+                        DatePicker::make('until')->label('Until'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query
-                            ->when($data['created_from'], fn ($q) => $q->whereDate('created_at', '>=', $data['created_from']))
-                            ->when($data['created_until'], fn ($q) => $q->whereDate('created_at', '<=', $data['created_until']));
+                            ->when($data['from'], fn ($q) => $q->whereDate('created_at', '>=', $data['from']))
+                            ->when($data['until'], fn ($q) => $q->whereDate('created_at', '<=', $data['until']));
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\RestoreAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                ])
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [];
     }
 
     public static function getPages(): array

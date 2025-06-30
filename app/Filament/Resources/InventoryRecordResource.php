@@ -26,6 +26,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Actions\ExportAction;
 use App\Filament\Exports\InventoryRecordExporter;
@@ -48,13 +49,19 @@ class InventoryRecordResource extends Resource
                         Tabs\Tab::make('Inventory Details')
                             ->columns(2)
                             ->schema([
+
                                 TextInput::make('serial_number')
                                     ->label('Serial Number')
                                     ->default(fn () => 'MMACI-' . strtoupper(Str::random(10)))
-                                    ->disabled()
                                     ->required()
-                                    ->dehydrated()
+
+                                    ->dehydrated() // ensure it is submitted even if hidden
                                     ->extraInputAttributes(['class' => 'text-center'])
+                                    ->columnSpanFull(),
+
+                                TextInput::make('temp_serial')
+                                    ->label('Serial Number')
+                                    ->required()
                                     ->columnSpanFull(),
 
                                 TextInput::make('qty')
@@ -98,47 +105,20 @@ class InventoryRecordResource extends Resource
                                     ->searchable()
                                     ->columnSpan(1),
 
-                                Select::make('brand_id')
+                               Select::make('brand_id')
                                     ->label('Brand')
+                                    ->relationship('brand', 'name', fn ($query) => $query->orderBy('name'))
                                     ->searchable()
-                                    ->options(
-                                        Brand::query()
-                                            ->latest()
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getSearchResultsUsing(fn (string $search) =>
-                                        Brand::query()
-                                            ->where('name', 'like', "%{$search}%")
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getOptionLabelUsing(fn ($value) =>
-                                        Brand::find($value)?->name
-                                    )
-                                    ->required()
+                                    ->preload()
                                     ->columnSpan(1),
 
                                 Select::make('model_id')
                                     ->label('Model')
+                                    ->relationship('model', 'name', fn ($query) => $query->orderBy('name'))
                                     ->searchable()
-                                    ->options(
-                                        Models::query()
-                                            ->latest()
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getSearchResultsUsing(fn (string $search) => 
-                                        Models::query()
-                                            ->where('name', 'like', "%{$search}%")
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getOptionLabelUsing(fn ($value) => 
-                                        Models::find($value)?->name
-                                    )
-                                    ->required()
+                                    ->preload()
                                     ->columnSpan(1),
+
 
                                 Textarea::make('description')
                                     ->label('Description')
@@ -151,86 +131,31 @@ class InventoryRecordResource extends Resource
                             ->schema([
                                 Select::make('category_id')
                                     ->label('Category')
+                                    ->relationship('category', 'name', fn ($query) => $query->orderBy('name'))
                                     ->searchable()
-                                    ->options(
-                                        Category::query()
-                                            ->latest()
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getSearchResultsUsing(fn (string $search) => 
-                                        Category::query()
-                                            ->where('name', 'like', "%{$search}%")
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getOptionLabelUsing(fn ($value) => 
-                                        Category::find($value)?->name
-                                    )
+                                    ->preload()
                                     ->required()
                                     ->columnSpan(1),
 
                                 Select::make('department_id')
                                     ->label('Department')
+                                    ->relationship('department', 'name', fn ($query) => $query->orderBy('name'))
                                     ->searchable()
-                                    ->options(
-                                        Department::query()
-                                            ->latest()
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getSearchResultsUsing(fn (string $search) => 
-                                        Department::query()
-                                            ->where('name', 'like', "%{$search}%")
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getOptionLabelUsing(fn ($value) => 
-                                        Department::find($value)?->name
-                                    )
-                                    ->required()
+                                    ->preload()
                                     ->columnSpan(1),
 
                                 Select::make('supplier_id')
                                     ->label('Supplier')
+                                    ->relationship('supplier', 'name', fn ($query) => $query->orderBy('name'))
                                     ->searchable()
-                                    ->options(
-                                        Supplier::query()
-                                            ->latest()
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getSearchResultsUsing(fn (string $search) => 
-                                        Supplier::query()
-                                            ->where('name', 'like', "%{$search}%")
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getOptionLabelUsing(fn ($value) => 
-                                        Supplier::find($value)?->name
-                                    )
-                                    ->required()
+                                    ->preload()
                                     ->columnSpan(1),
 
                                 Select::make('location_id')
                                     ->label('Location')
+                                    ->relationship('location', 'name', fn ($query) => $query->orderBy('name'))
                                     ->searchable()
-                                    ->options(
-                                        Location::query()
-                                            ->latest()
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getSearchResultsUsing(fn (string $search) => 
-                                        Location::query()
-                                            ->where('name', 'like', "%{$search}%")
-                                            ->limit(10)
-                                            ->pluck('name', 'id')
-                                    )
-                                    ->getOptionLabelUsing(fn ($value) => 
-                                        Location::find($value)?->name
-                                    )
-                                    ->required()
+                                    ->preload()
                                     ->columnSpan(1),
 
                                 Select::make('status')
@@ -241,13 +166,19 @@ class InventoryRecordResource extends Resource
                                         'Damaged' => 'Damaged',
                                         'In Maintenance' => 'In Maintenance',
                                     ])
-                                    ->columnSpanFull(),
+                                    ->columnSpan(1),
+
+                                DateTimePicker::make('recorded_at')
+                                    ->label('Recorded At')
+                                    ->placeholder('Not Returned')
+                                    ->default(now())
+                                    ->columnSpan(1),
 
                                 Textarea::make('remarks')
                                     ->label('Remarks')
                                     ->columnSpanFull()
-                                    ->placeholder('Enter any additional remarks or notes about the inventory item.')
-                            ]),
+                                    ->placeholder('Enter any additional remarks or notes about the inventory item.'),
+                                ]),
                     ]),
             ]);
     }
@@ -256,15 +187,13 @@ class InventoryRecordResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('serial_number')->label('Serial Number')->searchable()->sortable(),
                 TextColumn::make('qty')->label('Quantity')->sortable()->toggleable(),
-                TextColumn::make('unit')->label('Unit')->sortable()->toggleable(),
+                TextColumn::make('unit')->label('Unit')->toggleable(),
+                TextColumn::make('description')->label('Description')->toggleable()->wrap()->searchable(),
                 TextColumn::make('brand.name')->label('Brand')->sortable()->searchable()->toggleable(),
                 TextColumn::make('model.name')->label('Model')->sortable()->searchable()->toggleable(),
-                TextColumn::make('category.name')->label('Category')->sortable()->searchable()->toggleable(),
-                TextColumn::make('department.name')->label('Department')->sortable()->searchable()->toggleable(),
-                TextColumn::make('supplier.name')->label('Supplier')->sortable()->searchable()->toggleable(),
-                TextColumn::make('location.name')->label('Location')->sortable()->searchable()->toggleable(),
+                TextColumn::make('serial_number')->label('Serial Number')->searchable()->toggleable(),
+                TextColumn::make('temp_serial')->label('Serial Number')->searchable()->toggleable(),
                 TextColumn::make('status')->label('Status')->sortable()->searchable()->toggleable()
                 ->badge()
                 ->color(fn ($state) => match ($state) {
@@ -274,12 +203,17 @@ class InventoryRecordResource extends Resource
                     'In Maintenance' => 'info',
                     default => 'secondary',
                 }),
+                TextColumn::make('remarks')->label('remarks')->toggleable()->wrap()->searchable(),
+                TextColumn::make('category.name')->label('Category')->sortable()->searchable()->toggleable(),
+                TextColumn::make('department.name')->label('Department')->sortable()->searchable()->toggleable(),
+                TextColumn::make('location.name')->label('Location')->sortable()->searchable()->toggleable(),
+                TextColumn::make('supplier.name')->label('Supplier')->sortable()->searchable()->toggleable(),
                 ToggleColumn::make('borrowed')
                 ->label('Borrowed')
                 ->sortable()
                 ->toggleable(),
-
-                TextColumn::make('created_at')->label('Date')->dateTime()->sortable()->toggleable(),
+                TextColumn::make('recorded_at')->label('Recorded At')->dateTime()->sortable()->toggleable(),
+                TextColumn::make('created_at')->label('Created At')->dateTime()->sortable()->toggleable(),
                 TextColumn::make('updated_at')->label('Updated At')->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
@@ -289,12 +223,6 @@ class InventoryRecordResource extends Resource
                 SelectFilter::make('category_id')->label('Category')->relationship('category', 'name'),
                 SelectFilter::make('department_id')->label('Department')->relationship('department', 'name'),
                 SelectFilter::make('location_id')->label('Location')->relationship('location', 'name'),
-                SelectFilter::make('status')->options([
-                    'Functional' => 'Functional',
-                    'Defective' => 'Defective',
-                    'Damaged' => 'Damaged',
-                    'In Maintenance' => 'In Maintenance',
-                ])->label('Status'),
                 Filter::make('created_at')
                     ->form([
                         DatePicker::make('from')->label('From'),
@@ -307,18 +235,19 @@ class InventoryRecordResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                ViewAction::make(),
-                Tables\Actions\Action::make('generate_qr')
-                    ->label('QR Code')
-                    ->icon('heroicon-o-qr-code')
-                    ->action(function ($record) {
-                        return redirect()->route('inventory.qr', ['id' => $record->id]);
-                    }),
-                Tables\Actions\RestoreAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
-
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    ViewAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\Action::make('generate_qr')
+                        ->label('QR Code')
+                        ->icon('heroicon-o-qr-code')
+                        ->action(fn ($record) =>
+                            redirect()->route('inventory.qr.download', ['id' => $record->id])
+                        ),
+                    Tables\Actions\RestoreAction::make(),
+                    Tables\Actions\ForceDeleteAction::make(),
+                ])
             ])
             ->headerActions([
                 ExportAction::make()->Exporter(InventoryRecordExporter::class)->label('Export Inventory Records'),

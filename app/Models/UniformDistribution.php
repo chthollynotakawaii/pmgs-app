@@ -4,39 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Validation\ValidationException;
 
 class UniformDistribution extends Model
-{
+{   
+    use Notifiable, SoftDeletes;
     public $timestamps = true;
     protected $fillable = [
-        'uniform_inventory_id',
-        'student_id',
-        'student_name',
-        'department_id',
+        'student_identification_id',
+        'sizes_id',
         'receipt_number',
-        'quantity',
-        'remarks',
     ];
 
-    protected static function booted()
-    {
-        static::created(function ($distribution) {
-            $inventory = UniformInventory::find($distribution->uniform_inventory_id);
-            if ($inventory && $inventory->quantity >= $distribution->quantity) {
-                $inventory->decrement('quantity', $distribution->quantity);
-            }
-        });
-    }
+    // public static function booted(): void
+    // {
 
-    public function uniformInventory(): BelongsTo
+    // }
+    protected $casts = [
+        'sizes_id' => 'array', // or 'json'
+    ];
+    public function studentIdentification()
     {
-        return $this->belongsTo(UniformInventory::class);
-    }
-
-    public function inventoryRecord(): BelongsTo
-    {
-        return $this->belongsTo(InventoryRecord::class);
+        return $this->belongsTo(UniformSize::class, 'student_identification_id');
     }
 
     public function department(): BelongsTo
@@ -46,6 +37,6 @@ class UniformDistribution extends Model
 
     public function setStudentNameAttribute($value)
     {
-        $this->attributes['student_name'] = strtoupper($value);
+        $this->attributes['receipt_number'] = strtoupper($value);
     }
 }

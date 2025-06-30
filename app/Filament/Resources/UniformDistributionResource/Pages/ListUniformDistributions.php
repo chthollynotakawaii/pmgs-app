@@ -14,8 +14,8 @@ class ListUniformDistributions extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Add Distribution Record') // Change button text
-                ->icon('heroicon-o-plus-circle'), // Change icon
+                ->label('Release Uniform') // Change button text
+                ->icon('heroicon-o-plus-circle'), // Change icon,
         ];
     }
 }

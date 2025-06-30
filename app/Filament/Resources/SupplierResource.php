@@ -25,19 +25,15 @@ class SupplierResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Supplier')
-                    ->required()
-                    ->maxLength(255),
+                    ->required(),
 
                 TextInput::make('email')
                     ->label('Email')
-                    ->email()
-                    ->required()
-                    ->maxLength(255),
-
+                    ->email(),
+                    
                 TextInput::make('phone')
                     ->label('Phone')
                     ->tel()
-                    ->required()
                     ->maxLength(20)
                     ->helperText('Format: +63 912-345-6789')
                     ->afterStateUpdated(function (Set $set, ?string $state) {
@@ -49,13 +45,9 @@ class SupplierResource extends Resource
                         }
                     })
                     ->dehydrateStateUsing(fn (?string $state) => $state),
-
-
                 
                 TextInput::make('address')
                     ->label('Address')
-                    ->required()
-                    ->maxLength(255),
             ]);
     }
 

@@ -28,8 +28,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'username',
+        'email',
+
         'role',
+        'department',
         'password',
     ];
 
@@ -55,4 +57,5 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function department() { return $this->belongsTo(Department::class); }
 }

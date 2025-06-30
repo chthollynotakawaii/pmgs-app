@@ -25,8 +25,7 @@ class ModelResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Model')
-                    ->required()
-                    ->maxLength(255),
+                    ->required(),
             ]);
     }
 

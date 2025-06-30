@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class Brand extends Model
 {
-    public $timestamps = true;
+
     use HasFactory, Notifiable;
 
     protected $table = 'brands';

@@ -24,8 +24,7 @@ class DepartmentResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Department')
-                    ->required()
-                    ->maxLength(255),
+                    ->required(),
             ]);
     }
 

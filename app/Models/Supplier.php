@@ -20,7 +20,6 @@ class Supplier extends Model
     {
         $this->attributes['name'] = strtoupper($value);
         $this->attributes['phone'] = strtoupper($value);
-        $this->attributes['email'] = strtoupper($value);
         $this->attributes['address'] = strtoupper($value); 
     }
 }

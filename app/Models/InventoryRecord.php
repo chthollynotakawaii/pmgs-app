@@ -20,12 +20,14 @@ class InventoryRecord extends Model
         'remarks',
         'brand_id',
         'model_id',
+        'temp_serial',
         'category_id',
         'department_id',
         'supplier_id',
         'location_id',
         'status',
         'borrowed',
+        'recorded_at',
     ];
 
     // Relationships
@@ -37,19 +39,19 @@ class InventoryRecord extends Model
     public function location() { return $this->belongsTo(Location::class); }
 
     // Auto-generate serial number if not set
-    protected static function boot()
-    {
-        parent::boot();
+    // protected static function boot()
+    // {
+    //     parent::boot();
 
-        static::creating(function ($record) {
-            if (empty($record->serial_number)) {
-                do {
-                    $serial = 'SN-' . strtoupper(Str::random(10));
-                } while (self::where('serial_number', $serial)->exists());
-                $record->serial_number = $serial;
-            }
-        });
-    }
+    //     static::creating(function ($record) {
+    //         if (empty($record->serial_number)) {
+    //             do {
+    //                 $serial = 'SN-' . strtoupper(Str::random(10));
+    //             } while (self::where('serial_number', $serial)->exists());
+    //             $record->serial_number = $serial;
+    //         }
+    //     });
+    // }
 
     protected static function booted()
     {
@@ -60,7 +62,8 @@ class InventoryRecord extends Model
                 'description' => $record->description,
                 'brand_id' => $record->brand_id,
                 'model_id' => $record->model_id,
-                'serial_number' => $record->serial_number,
+                // 'serial_number' => $record->serial_number,
+                'temp_serial' => $record->temp_serial,
                 'remarks' => $record->remarks,
                 'status' => $record->status,
                 'category_id' => $record->category_id,
@@ -91,9 +94,17 @@ class InventoryRecord extends Model
             );
         });
     }
+
     public function borrowingLogs()
     {
         return $this->hasMany(BorrowingLog::class);
+    }
+
+    public function setNameAttribute($value)
+    {
+        $this->attributes['remarks'] = strtoupper($value);
+        $this->attributes['description'] = strtoupper($value);
+        $this->attributes['temp_serial'] = strtoupper($value);
     }
 
 }

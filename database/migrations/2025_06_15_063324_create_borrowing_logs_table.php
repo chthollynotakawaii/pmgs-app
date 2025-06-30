@@ -18,8 +18,9 @@ return new class extends Migration
             $table->foreignId('location_id')->constrained()->cascadeOnDelete();
             $table->integer('quantity'); 
             $table->dateTime('returned_at')->nullable();
-            $table->string('remarks')->nullable()->default('borrowed');
+            $table->boolean('remarks')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

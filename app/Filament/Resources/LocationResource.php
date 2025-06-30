@@ -24,8 +24,7 @@ class LocationResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Location')
-                    ->required()
-                    ->maxLength(255),
+                    ->required(),
             ]);
     }
 

@@ -19,12 +19,13 @@ return new class extends Migration
             $table->foreignId('brand_id')->nullable();
             $table->foreignId('model_id')->nullable();
             $table->string('serial_number');
+            $table->string('temp_serial')->nullable();
             $table->string('remarks')->nullable();
-            $table->string('status');
-            $table->foreignId('category_id');
-            $table->foreignId('department_id');
-            $table->foreignId('location_id');
-            $table->foreignId('supplier_id');
+            $table->string('status')->nullable();
+            $table->foreignId('category_id')->nullable();
+            $table->foreignId('department_id')->nullable();
+            $table->foreignId('location_id')->nullable();
+            $table->foreignId('supplier_id')->nullable();
             $table->timestamp('recorded_at')->useCurrent(); // use this instead of created_at
         });
     }
