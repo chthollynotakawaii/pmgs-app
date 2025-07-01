@@ -22,7 +22,6 @@ use App\Filament\Exports\UniformSizeExporter;
 class UniformSizeResource extends Resource
 {
     protected static ?string $model = UniformSize::class;
-    protected static ?string $navigationGroup = 'Inventory Management';
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationIcon = 'heroicon-s-bars-arrow-down';
 

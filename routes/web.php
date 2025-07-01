@@ -7,7 +7,7 @@ use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Response;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('filament.user.pages.dashboard');
 });
 
 // This route now directly downloads the QR code
@@ -27,6 +27,7 @@ Route::get('/inventory/qr/{id}', function ($id) {
         'Status' => $record->status,
         'Description' => $record->description,
         'Remarks' => $record->remarks,
+        'Recorded At' => $record->recorded_at,
     ];
 
     $text = collect($data)->map(fn($v, $k) => "$k: $v")->implode("\n");

@@ -25,7 +25,6 @@ class UniformInventoryResource extends Resource
     protected static ?string $model = UniformInventory::class;
     protected static ?string $label = 'Uniform Stocks';
     protected static ?string $pluralLabel = 'Uniform Stocks';
-    protected static ?string $navigationGroup = 'Inventory Management';
     protected static ?int $navigationSort = 3;
     protected static ?string $navigationIcon = 'heroicon-s-clipboard';
     

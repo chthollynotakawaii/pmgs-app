@@ -24,7 +24,6 @@ use Filament\Forms\Components\DatePicker;
 class UniformDistributionResource extends Resource
 {
     protected static ?string $model = UniformDistribution::class;
-    protected static ?string $navigationGroup = 'Inventory Management';
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationIcon = 'heroicon-s-identification';
 

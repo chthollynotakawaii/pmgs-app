@@ -20,12 +20,11 @@ use Carbon\Carbon;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
-
+use GuzzleHttp\Promise\Create;
 
 class BorrowingLogResource extends Resource
 {
     protected static ?string $model = BorrowingLog::class;
-    protected static ?string $navigationGroup = 'Inventory Management';
     protected static ?int $navigationSort = 2;
     protected static ?string $navigationBadge = null;
 
@@ -55,8 +54,8 @@ class BorrowingLogResource extends Resource
                 )
                 ->searchable()
                 ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->temp_serial} (Available: {$record->qty})")
-                ->columnSpan(fn ($livewire) => $livewire instanceof EditBorrowingLog ? 2 : 1)
                 ->preload()
+                ->visibleOn('create')
                 ->required(),
 
             TextInput::make('quantity')
@@ -64,9 +63,29 @@ class BorrowingLogResource extends Resource
                 ->numeric()
                 ->integer()
                 ->minValue(1)
-                ->default(1)
-                ->columnSpan(1)
-                ->required(),
+                ->required()
+                ->live()
+                ->reactive()
+                ->rule(function (callable $get) {
+                    return function ($attribute, $value, $fail) use ($get) {
+                        $inventoryId = $get('inventory_record_id');
+
+                        if (! $inventoryId || ! is_numeric($value)) {
+                            return;
+                        }
+
+                        $record = \App\Models\InventoryRecord::find($inventoryId);
+
+                        if (! $record) {
+                            $fail('The selected inventory item is invalid.');
+                            return;
+                        }
+
+                        if ($value > $record->qty) {
+                            $fail("Only {$record->qty} item(s) are available.");
+                        }
+                    };
+                }),
 
             Select::make('user_id')
                 ->label('Borrower')
@@ -116,6 +135,7 @@ class BorrowingLogResource extends Resource
                 TextColumn::make('inventoryRecord.model.name')->label('Model')->sortable()->searchable()->toggleable(),
                 TextColumn::make('inventoryRecord.category.name')->label('Category')->sortable()->searchable()->toggleable(),
                 TextColumn::make('inventoryRecord.department.name')->label('Department From')->sortable()->searchable()->toggleable(),
+                TextColumn::make('custom_borrower')->label('Custom Borrower')->sortable()->toggleable(),
                 TextColumn::make('user.name')->label('Borrower')->sortable()->searchable()->toggleable(),
                 TextColumn::make('user.department.name')->label("Borrower's Department")->sortable()->searchable()->toggleable(),
                 TextColumn::make('inventoryRecord.location.name')->label('Location From')->sortable()->searchable()->toggleable(),

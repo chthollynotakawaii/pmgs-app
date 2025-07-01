@@ -5,12 +5,18 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
+public function canAccessPanel(Panel $panel): bool
+{
+    return $this->role === $panel->getId(); // Match role with panel ID (e.g., 'admin', 'user')
+}
+
     public $timestamps = true;
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -28,10 +34,9 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'email',
-
-        'role',
+        'username',
         'department',
+        'role',
         'password',
     ];
 
@@ -58,4 +63,8 @@ class User extends Authenticatable
         ];
     }
     public function department() { return $this->belongsTo(Department::class); }
+    public function setUserAttribute($value)
+    {
+        $this->attributes['name'] = strtoupper($value);
+    }
 }

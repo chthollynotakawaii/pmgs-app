@@ -35,7 +35,6 @@ use App\Filament\Exports\InventoryRecordExporter;
 class InventoryRecordResource extends Resource
 {
     protected static ?string $model = InventoryRecord::class;
-    protected static ?string $navigationGroup = 'Inventory Management';
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationIcon = 'heroicon-s-list-bullet';
 

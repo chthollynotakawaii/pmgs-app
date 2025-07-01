@@ -1,30 +1,44 @@
 <?php
+
 namespace App\Filament\Resources\Auth;
 
-use Filament\Forms\Components\TextInput;
-use Filament\Pages\Auth\Login;
 use Filament\Forms\Form;
+use Filament\Pages\Auth\Login;
+use Filament\Forms\Components\TextInput;
+use Filament\Facades\Filament;
+use Illuminate\Validation\ValidationException;
 
 class CustomLogin extends Login
 {
     public function getHeading(): string
     {
-        return 'PMGS'; // Removes the "Sign in" text
+        return 'PMGS';
     }
-    public function form(Form $form): Form
-    {   
-        return $form->schema([
-            TextInput::make('username')
-                ->label('Username')
-                ->required()
-                ->autocomplete('username'),
-            TextInput::make('password')
-                ->label('Password')
-                ->password()
-                ->required()
-                ->autocomplete('current-password'),
-        ]);
+
+    protected function getForms(): array
+    {
+        return [
+            'form' => $this->form(
+                $this->makeForm()
+                    ->schema([
+                        $this->getUsernameFormComponent(),
+                        $this->getPasswordFormComponent(),
+                        $this->getRememberFormComponent(),
+                    ])
+                    ->statePath('data')
+            ),
+        ];
     }
+    protected function getUsernameFormComponent(): TextInput
+    {
+        return TextInput::make('username')
+            ->label('Username')
+            ->required()
+            ->autofocus()
+            ->autocomplete()
+            ->extraAttributes(['tabindex' => 1]);
+    }
+
     protected function getCredentialsFromFormData(array $data): array
     {
         return [
@@ -32,9 +46,16 @@ class CustomLogin extends Login
             'password' => $data['password'],
         ];
     }
+
     public static function getRouteName(): string
     {
-        return 'filament.admin.login';
+        return 'filament.' . Filament::getCurrentPanel()->getId() . '.login';
     }
 
+    protected function throwFailureValidationException(): never
+    {
+        throw ValidationException::withMessages([
+            'data.username' => __('filament-panels::pages/auth/login.messages.failed'),
+        ]);
+    }
 }
