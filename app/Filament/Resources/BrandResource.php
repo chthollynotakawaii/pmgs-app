@@ -22,9 +22,12 @@ class BrandResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')
-                    ->label('Brand')
-                    ->required(),
+            TextInput::make('name')
+                ->label('Brand')
+                ->required()
+                ->unique(ignoreRecord: true)
+                ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                ->dehydrateStateUsing(fn ($state) => trim($state)),
             ]);
     }
 
@@ -39,6 +42,7 @@ class BrandResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

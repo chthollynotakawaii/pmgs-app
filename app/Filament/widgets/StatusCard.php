@@ -28,16 +28,16 @@ class StatusCard extends BaseWidget
                 ->description('Total number of items currently borrowed')
                 ->color('info')
                 ->icon('heroicon-o-clipboard'),
+                
+            Stat::make('Total Functional Items', (clone $query)->where('status', 'functional')->count())
+                ->description('Total number of functional inventory items')
+                ->color('success')
+                ->icon('heroicon-o-check-circle'),
 
             Stat::make('Total Defective Items', (clone $query)->where('status', 'defective')->count())
                 ->description('Total number of defective inventory items')
                 ->color('danger')
                 ->icon('heroicon-o-exclamation-triangle'),
-
-            Stat::make('Total Functional Items', (clone $query)->where('status', 'functional')->count())
-                ->description('Total number of functional inventory items')
-                ->color('success')
-                ->icon('heroicon-o-check-circle'),
 
             Stat::make('Total Items Damaged', (clone $query)->where('status', 'damaged')->count())
                 ->description('Total number of damaged inventory items')

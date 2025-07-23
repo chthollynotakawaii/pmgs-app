@@ -16,4 +16,9 @@ class Course extends Model
     {
         $this->attributes['name'] = strtoupper($value);
     }
+    public function uniformInventories()
+    {
+        return $this->hasMany(UniformInventory::class);
+    }
+
 }

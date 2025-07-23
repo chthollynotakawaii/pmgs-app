@@ -3,19 +3,15 @@
 namespace App\Filament\Resources\UniformDistributionResource\Pages;
 
 use App\Filament\Resources\UniformDistributionResource;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
 class EditUniformDistribution extends EditRecord
 {
     protected static string $resource = UniformDistributionResource::class;
 
-    protected function getHeaderActions(): array
+    protected function mutateFormDataBeforeSave(array $data): array
     {
-        return [
-            Actions\DeleteAction::make(),
-        ];
-        
+        return $data;
     }
     protected function getRedirectUrl(): string
     {

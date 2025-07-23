@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+body {
+    @apply bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800;
+    position: relative;
+}
+
+/* Show watermark as background image */
+body::before {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.05;  
+    z-index: 0;
+    pointer-events: none;
+    background-image: url('/images/mmaci.png'); /* Make sure this path is correct */
+    background-repeat: no-repeat;
+    background-size: 650px auto;
+    width: 650px;
+    height: 650px;
+}
+
+@media (max-width: 768px) {
+    body::before {
+        background-size: 300px auto;
+        width: 300px;
+        height: 300px;
+    }
+}

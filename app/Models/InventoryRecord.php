@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;;
 
 class InventoryRecord extends Model
 {
@@ -13,14 +15,15 @@ class InventoryRecord extends Model
     use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'serial_number',
         'qty',
         'unit',
         'description',
         'remarks',
         'brand_id',
         'model_id',
+        'control_number',
         'temp_serial',
+        'thumbnail',
         'category_id',
         'department_id',
         'supplier_id',
@@ -28,6 +31,10 @@ class InventoryRecord extends Model
         'status',
         'borrowed',
         'recorded_at',
+    ];
+    
+    protected $casts = [
+    'thumbnail' => 'string',
     ];
 
     // Relationships
@@ -38,20 +45,6 @@ class InventoryRecord extends Model
     public function supplier() { return $this->belongsTo(Supplier::class); }
     public function location() { return $this->belongsTo(Location::class); }
 
-    // Auto-generate serial number if not set
-    // protected static function boot()
-    // {
-    //     parent::boot();
-
-    //     static::creating(function ($record) {
-    //         if (empty($record->serial_number)) {
-    //             do {
-    //                 $serial = 'SN-' . strtoupper(Str::random(10));
-    //             } while (self::where('serial_number', $serial)->exists());
-    //             $record->serial_number = $serial;
-    //         }
-    //     });
-    // }
 
     protected static function booted()
     {
@@ -62,7 +55,7 @@ class InventoryRecord extends Model
                 'description' => $record->description,
                 'brand_id' => $record->brand_id,
                 'model_id' => $record->model_id,
-                // 'serial_number' => $record->serial_number,
+                'control_nubmer' => $record->control_nubmer,
                 'temp_serial' => $record->temp_serial,
                 'remarks' => $record->remarks,
                 'status' => $record->status,
@@ -73,10 +66,9 @@ class InventoryRecord extends Model
                 'recorded_at' => now(),
             ]);
         });
-
         static::updated(function ($record) {
             InventoryBackup::updateOrCreate(
-                ['serial_number' => $record->serial_number],
+                ['temp_serial' => $record->temp_serial],
                 [
                     'qty' => $record->qty,
                     'unit' => $record->unit,
@@ -93,18 +85,32 @@ class InventoryRecord extends Model
                 ]
             );
         });
-    }
+        static::addGlobalScope('department', function (Builder $builder) {
+            $user = Auth::user();
 
+            // Only apply the scope if the user is not admin
+            if ($user && $user->role !== 'admin') {
+                $builder->where('department_id', $user->department_id);
+            }
+        });
+        
+    }
+    public function inventoryRecords()
+    {
+        return $this->belongsToMany(InventoryRecord::class, 'preventive_maintenance_inventory_record', 'preventive_maintenance_id', 'inventory_record_id');
+    }
     public function borrowingLogs()
     {
         return $this->hasMany(BorrowingLog::class);
     }
-
     public function setNameAttribute($value)
     {
         $this->attributes['remarks'] = strtoupper($value);
         $this->attributes['description'] = strtoupper($value);
         $this->attributes['temp_serial'] = strtoupper($value);
     }
-
+    public function propertyRequests()
+    {
+        return $this->hasMany(PropertyRequest::class);
+    }
 }

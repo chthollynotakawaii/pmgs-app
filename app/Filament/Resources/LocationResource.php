@@ -24,7 +24,10 @@ class LocationResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Location')
-                    ->required(),
+                    ->unique(ignoreRecord: true)
+                    ->required()
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn ($state) => trim($state)),
             ]);
     }
 
@@ -42,6 +45,7 @@ class LocationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

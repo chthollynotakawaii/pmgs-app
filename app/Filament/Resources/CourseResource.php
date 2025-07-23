@@ -28,7 +28,7 @@ class CourseResource extends Resource
         return $form
             ->schema([
                 TextInput::make('name')
-                    ->label('Brand')
+                    ->label('Course')
                     ->required(),
             ]);
     }
@@ -38,7 +38,7 @@ class CourseResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Department')
+                    ->label('Course')
                     ->searchable()
                     ->sortable(),
             ])
@@ -47,6 +47,7 @@ class CourseResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

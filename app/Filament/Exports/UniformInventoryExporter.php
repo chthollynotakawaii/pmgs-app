@@ -14,11 +14,9 @@ class UniformInventoryExporter extends Exporter
     public static function getColumns(): array
     {
         return [
-            ExportColumn::make('id')
-                ->label('ID'),
 
-            ExportColumn::make('inventoryRecord.temp_serial')
-                ->label('Uniform Serial Number'),
+            ExportColumn::make('course.id')
+                ->label('Course'),
 
             ExportColumn::make('details')
                 ->label('Uniform Details')
@@ -43,10 +41,7 @@ class UniformInventoryExporter extends Exporter
                 }),
 
             ExportColumn::make('created_at')
-                ->label('Added At'),
-
-            ExportColumn::make('updated_at')
-                ->label('Updated At'),
+                ->label('Recorded At'),
 
         ];
     }

@@ -18,7 +18,6 @@ return new class extends Migration
             $table->longText('description')->nullable();
             $table->foreignId('brand_id')->nullable();
             $table->foreignId('model_id')->nullable();
-            $table->string('serial_number');
             $table->string('temp_serial')->nullable();
             $table->string('remarks')->nullable();
             $table->string('status')->nullable();

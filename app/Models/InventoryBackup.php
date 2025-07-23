@@ -11,7 +11,7 @@ class InventoryBackup extends Model
     use HasFactory, Notifiable;
     public $timestamps = false; // Using recorded_at instead of created_at/updated_at
     protected $fillable = [
-        'serial_number',
+        'temp_serial',
         'qty',
         'unit',
         'description',

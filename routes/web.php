@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use App\Models\InventoryRecord;
 use Endroid\QrCode\QrCode;
@@ -7,10 +6,9 @@ use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Response;
 
 Route::get('/', function () {
-    return redirect()->route('filament.user.pages.dashboard');
+    return redirect()->route('filament.admin.pages.dashboard');
 });
 
-// This route now directly downloads the QR code
 Route::get('/inventory/qr/{id}', function ($id) {
     $record = InventoryRecord::findOrFail($id);
 
@@ -43,7 +41,7 @@ Route::get('/inventory/qr/{id}', function ($id) {
         200,
         [
             'Content-Type' => 'image/png',
-            'Content-Disposition' => 'attachment; filename="' . $record->serial_number . '.png"',
+            'Content-Disposition' => 'attachment; filename="' . $record->temp_serial . '.png"',
         ]
     );
 })->name('inventory.qr.download');

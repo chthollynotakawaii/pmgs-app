@@ -11,17 +11,19 @@ use Filament\Pages;
 use Filament\Panel;
 use App\Filament\Resources\InventoryRecordResource;
 use App\Filament\Resources\BorrowingLogResource;
+use App\Filament\Widgets\InventoryOverviewChart;
 use App\Filament\Widgets\StatusCard;
+use App\Filament\Widgets\UpcomingMaintenanceWidget;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
-use pxlrbt\FilamentSpotlight\SpotlightPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Hardikkhorasiya09\ChangePassword\ChangePasswordPlugin;
+use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -42,17 +44,21 @@ class UserPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/User/Pages'), for: 'App\\Filament\\User\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+                \App\Filament\Pages\ScanQr::class,
             ])
             ->discoverWidgets(in: app_path('Filament/User/Widgets'), for: 'App\\Filament\\User\\Widgets')
             ->widgets([
-                StatusCard::class
-            ])
+                StatusCard::class,
+                InventoryOverviewChart::class,
+                UpcomingMaintenanceWidget::class,
+            ])  
             ->resources([
                 InventoryRecordResource::class,
                 BorrowingLogResource::class,
             ])
             ->plugins([
-                SpotlightPlugin::make()
+                ChangePasswordPlugin::make(),
+                AuthUIEnhancerPlugin::make(), 
             ])
             ->middleware([
                 EncryptCookies::class,

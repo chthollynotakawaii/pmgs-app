@@ -1,0 +1,4 @@
+/* Increase font size for inputs, labels, tables, etc. */
+.fi-input, .fi-label, .fi-text, .fi-table, .fi-section-header, .fi-modal-heading {
+    font-size: 1.125rem !important; /* text-lg */
+}

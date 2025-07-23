@@ -18,7 +18,8 @@ return new class extends Migration
             $table->longText('description')->nullable();
             $table->foreignId('brand_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('model_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->string('serial_number')->unique();
+            $table->string('control_number')->unique(); // Ensure it's string before unique
+            $table->string('thumbnail')->nullable(); // Add this line for thumbnail
             $table->string('temp_serial')->nullable();
             $table->string('remarks')->nullable();
             $table->string('status')->nullable()->index();
@@ -27,9 +28,10 @@ return new class extends Migration
             $table->foreignId('location_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained()->cascadeOnDelete();
             $table->boolean('borrowed')->default(false);
+            $table->boolean('insured')->default(false);
             $table->dateTime('recorded_at')->nullable();
             $table->timestamps();
-            $table->softDeletes(); // optional
+            $table->softDeletes();
         });
     }
 

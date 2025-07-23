@@ -17,18 +17,26 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use pxlrbt\FilamentSpotlight\SpotlightPlugin;
+use Hardikkhorasiya09\ChangePassword\ChangePasswordPlugin;
+// use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
+use Filament\View\PanelsRenderHook;
+use Filament\Support\Facades\FilamentView;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        // FilamentView::registerRenderHook(
+        // PanelsRenderHook::HEAD_END,
+        // fn () => '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>'
+        // );
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
             ->brandName('PMGS')
-            ->sidebarCollapsibleOnDesktop()
+            ->topNavigation()
+            // ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full')
             ->font('poppins')
             ->favicon(asset('images/logo.png'))
@@ -41,6 +49,7 @@ class AdminPanelProvider extends PanelProvider
                 'warning' => Color::Yellow,
                 'info' => Color::Cyan,
             ])
+            // ->theme(asset('css/filament/admin/theme.css'))
             ->databaseNotifications()
             ->discoverResources(
                 in: app_path('Filament/Resources'),
@@ -56,8 +65,14 @@ class AdminPanelProvider extends PanelProvider
                 for: 'App\\Filament\\Widgets',
             )
             ->plugins([
-                SpotlightPlugin::make()
-            ])
+                ChangePasswordPlugin::make(),
+                // AuthUIEnhancerPlugin::make()
+                // ->showEmptyPanelOnMobile(false)
+                // ->formPanelWidth('25%')
+                // ->formPanelBackgroundColor(Color::hex('#f2c74d'))
+                // ->emptyPanelBackgroundImageUrl(asset('images/mmaci-bg.svg')),
+                
+                ])
             ->widgets([])
             ->middleware([
                 EncryptCookies::class,
@@ -73,5 +88,6 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+            
     }
 }

@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UniformInventoryResource\Pages;
 use App\Models\UniformInventory;
-use App\Models\InventoryRecord;
 use App\Models\Course;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
@@ -19,34 +18,25 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Actions\ExportAction;
 use App\Filament\Exports\UniformInventoryExporter;
+use Filament\Forms\Get;
 
 class UniformInventoryResource extends Resource
 {
     protected static ?string $model = UniformInventory::class;
-    protected static ?string $label = 'Uniform Stocks';
-    protected static ?string $pluralLabel = 'Uniform Stocks';
+    protected static ?string $label = 'Uniform Inventory';
+    protected static ?string $pluralLabel = 'Uniform Inventory';
+    protected static ?string $navigationGroup = 'Uniform Management';
     protected static ?int $navigationSort = 3;
     protected static ?string $navigationIcon = 'heroicon-s-clipboard';
-    
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Select::make('inventory_record_id')
-                ->label('Inventory Item')
-                ->relationship(
-                    name: 'inventoryRecord',
-                    titleAttribute: 'temp_serial',
-                    modifyQueryUsing: function ($query) {
-                        $usedIds = UniformInventory::pluck('inventory_record_id');
-                        return $query
-                            ->whereHas('category', fn ($q) => $q->where('name', 'UNIFORM'))
-                            ->whereNotIn('id', $usedIds);
-                    }
-                )
+            Select::make('course_id')
+                ->label('Course')
+                ->options(Course::all()->pluck('name', 'id'))
                 ->searchable()
                 ->preload()
-                ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->temp_serial} (Available: {$record->qty})")
                 ->columnSpanFull()
                 ->required(),
 
@@ -62,6 +52,10 @@ class UniformInventoryResource extends Resource
                             'TYPE B LOWER' => 'TYPE B LOWER',
                             'TYPE P.E UPPER' => 'TYPE P.E UPPER',
                             'TYPE P.E LOWER' => 'TYPE P.E LOWER',
+                            'COVERALL' => 'COVERALL',
+                            'GOGGLES' => 'GOGGLES',
+                            'HELMET' => 'HELMET',
+                            'BAG' => 'BAG',
                         ])
                         ->searchable()
                         ->required(),
@@ -75,43 +69,37 @@ class UniformInventoryResource extends Resource
                             'L' => 'L',
                             'XL' => 'XL',
                             'XXL' => 'XXL',
+                            'XXXL' => 'XXXL',
+                            '4XL' => '4XL',
+                            '5XL' => '5XL',
+                            '6XL' => '6XL',
                         ])
                         ->searchable()
-                        ->required(),
-
-                    Select::make('course_id')
-                        ->label('Course')
-                        ->options(Course::all()->pluck('name', 'id'))
-                        ->searchable()
-                        ->preload()
                         ->required(),
 
                     TextInput::make('quantity')
                         ->label('Quantity')
                         ->numeric()
                         ->minValue(1)
+                        ->default(1)
                         ->required(),
                 ])
                 ->rule(function (callable $get) {
                     return function (string $attribute, $value, \Closure $fail) use ($get) {
-                        $details = $value ?? [];
-                        $inventoryRecordId = $get('inventory_record_id');
+                        $combos = collect($value ?? [])
+                            ->map(fn ($item) => ($item['uniform_type'] ?? '') . '|' . ($item['size'] ?? ''))
+                            ->filter()
+                            ->toArray();
 
-                        if (!$inventoryRecordId) {
-                            return;
-                        }
-
-                        $total = collect($details)->sum(fn ($item) => isset($item['quantity']) ? (int) $item['quantity'] : 0);
-                        $inventoryRecord = InventoryRecord::find($inventoryRecordId);
-
-                        if ($inventoryRecord && $total > $inventoryRecord->qty) {
-                            $fail("The total assigned quantity ($total) exceeds the available stock ({$inventoryRecord->qty}).");
+                        if (count($combos) !== count(array_unique($combos))) {
+                            $fail('Duplicate combinations of uniform type and size are not allowed.');
                         }
                     };
                 })
+                ->disableItemDeletion(fn (Get $get) => $get('id') !== null)
                 ->minItems(1)
-                ->columnSpanFull()
-                ->columns(4),
+                ->columns(3)
+                ->columnSpanFull(),
         ]);
     }
 
@@ -119,8 +107,8 @@ class UniformInventoryResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('inventoryRecord.temp_serial')
-                    ->label('Uniform Serial Number')
+                TextColumn::make('course.name')
+                    ->label('Course')
                     ->searchable()
                     ->sortable(),
 
@@ -129,55 +117,40 @@ class UniformInventoryResource extends Resource
                     ->getStateUsing(function ($record) {
                         $details = is_array($record->details) ? $record->details : json_decode($record->details, true);
 
-                        if (!is_array($details)) {
-                            return [];
-                        }
-
-                        $courses = Course::pluck('name', 'id');
-
-                        return collect($details)->map(function ($item) use ($courses) {
+                        return collect($details)->map(function ($item) {
                             $type = $item['uniform_type'] ?? '-';
                             $size = $item['size'] ?? '-';
-                            $course = $courses[$item['course_id']] ?? '-';
                             $qty = $item['quantity'] ?? '-';
-
-                            return "Type: $type | Size: $size | Course: $course | Quantity: $qty";
+                            return "Type: $type | Size: $size | Quantity: $qty";
                         })->values()->all();
                     })
                     ->listWithLineBreaks()
                     ->bulleted()
-                    ->wrap()
-                    ->toggleable(),
+                    ->wrap(),
 
                 TextColumn::make('created_at')
                     ->label('Added At')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
+                    ->sortable(),
 
                 TextColumn::make('updated_at')
                     ->label('Updated At')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
+                    ->sortable(),
             ])
-
             ->filters([
                 TrashedFilter::make(),
                 Filter::make('created_today')
                     ->label('Added Today')
                     ->query(fn ($query) => $query->whereDate('created_at', now()->toDateString())),
-
                 Filter::make('recent')
                     ->label('Last 7 Days')
                     ->query(fn ($query) => $query->where('created_at', '>=', now()->subDays(7))),
-                        Filter::make('created_at_range')
+                Filter::make('created_at_range')
                     ->label('Created At Range')
                     ->form([
-                        DatePicker::make('from')
-                            ->label('From'),
-                        DatePicker::make('until')
-                            ->label('Until'),
+                        DatePicker::make('from')->label('From'),
+                        DatePicker::make('until')->label('Until'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query

@@ -10,28 +10,13 @@ class Dashboard extends BaseDashboard
 {
     use HasFiltersForm;
 
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static ?string $navigationIcon = 'heroicon-s-home';
     
 
     public function filtersForm(Form $form): Form
     {
         return $form->schema([
-            Section::make('Filters')
-                ->description('Use these filters to narrow down the data displayed on the dashboard.')
-                ->label('Dashboard Filters')
-                ->collapsible()
-                ->columns(2)
-                ->schema([
-                    DatePicker::make('start_date')
-                        ->label('Start Date')
-                        ->default(now()->startOfMonth())
-                        ->required(),
 
-                    DatePicker::make('end_date')
-                        ->label('End Date')
-                        ->default(now()->endOfDay())
-                        ->required(),
-                ]),
         ]);
     }
 }   

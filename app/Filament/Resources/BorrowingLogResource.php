@@ -21,11 +21,13 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use GuzzleHttp\Promise\Create;
+use Filament\Forms\Components\Toggle;
 
 class BorrowingLogResource extends Resource
 {
     protected static ?string $model = BorrowingLog::class;
     protected static ?int $navigationSort = 2;
+    protected static ?string $navigationGroup = 'Property Management';
     protected static ?string $navigationBadge = null;
 
     public static function getNavigationBadge(): ?string
@@ -38,11 +40,11 @@ class BorrowingLogResource extends Resource
         return 'Borrowed Properties not returned';
     }
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-s-folder-open';
 
     public static function form(Form $form): Form
     {
-        return $form->schema([
+return $form->schema([
             Select::make('inventory_record_id')
                 ->label('Inventory Item')
                 ->relationship(
@@ -53,7 +55,11 @@ class BorrowingLogResource extends Resource
                         ->where('qty', '>', 0)
                 )
                 ->searchable()
-                ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->temp_serial} (Available: {$record->qty})")
+                ->getOptionLabelFromRecordUsing(function ($record) {
+                    $department = optional($record->department)->name ?? 'N/A';
+                    $location = optional($record->location)->name ?? 'N/A';
+                    return "SN: {$record->temp_serial} | Departmentt: {$department} | Location: {$location} | Qty: {$record->qty}";
+                })
                 ->preload()
                 ->visibleOn('create')
                 ->required(),
@@ -116,10 +122,9 @@ class BorrowingLogResource extends Resource
             DateTimePicker::make('returned_at')
                 ->label('Returned At')
                 ->default(Carbon::now()->setTime(18, 0, 0))
-                ->columnSpan(fn ($get) =>
-                    filled($get('user_id')) || filled($get('custom_borrower')) ? 2 : 1
-                )
-                ->required()
+                ->columnSpan(1)
+                ->required(),
+
         ]);
     }
 
@@ -135,14 +140,19 @@ class BorrowingLogResource extends Resource
                 TextColumn::make('inventoryRecord.model.name')->label('Model')->sortable()->searchable()->toggleable(),
                 TextColumn::make('inventoryRecord.category.name')->label('Category')->sortable()->searchable()->toggleable(),
                 TextColumn::make('inventoryRecord.department.name')->label('Department From')->sortable()->searchable()->toggleable(),
-                TextColumn::make('custom_borrower')->label('Custom Borrower')->sortable()->toggleable(),
+                TextColumn::make('custom_borrower')->label('External Borrower')->sortable()->toggleable(),
                 TextColumn::make('user.name')->label('Borrower')->sortable()->searchable()->toggleable(),
                 TextColumn::make('user.department.name')->label("Borrower's Department")->sortable()->searchable()->toggleable(),
                 TextColumn::make('inventoryRecord.location.name')->label('Location From')->sortable()->searchable()->toggleable(),
                 TextColumn::make('location.name')->label('Location To')->sortable()->searchable()->toggleable(),
                 TextColumn::make('created_at')->label('Borrowed At')->dateTime()->sortable()->toggleable(),
                 TextColumn::make('returned_at')->label('Returned At')->dateTime()->sortable()->placeholder('Not Returned')->toggleable(),
-                ToggleColumn::make('remarks')->label('Remarks')->sortable()->toggleable(),
+                ToggleColumn::make('remarks')
+                    ->label('Remarks')
+                    ->sortable()
+                    ->toggleable()
+                    ->disabled(fn ($record) => $record->remarks === 1),
+
             ])
             ->filters([
                 TrashedFilter::make(),
@@ -178,13 +188,13 @@ class BorrowingLogResource extends Resource
 
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\RestoreAction::make(),
                     Tables\Actions\ForceDeleteAction::make(),
                 ])
             ])
+            ->recordUrl(null)
             ->headerActions([
                 ExportAction::make()
                     ->exporter(BorrowingLogExporter::class)

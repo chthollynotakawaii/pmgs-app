@@ -7,13 +7,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "diogogpinto/filament-auth-ui-enhancer": "^1.0",
         "endroid/qr-code": "4.0",
         "filament/actions": "^3.3",
         "filament/filament": "3.3",
         "filament/notifications": "^3.3",
         "flowframe/laravel-trend": "^0.4.0",
+        "hardikkhorasiya09/change-password": "*",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "livewire/livewire": "^3.6",
         "maatwebsite/excel": "^3.1",
         "pxlrbt/filament-spotlight": "^2.0"
     },

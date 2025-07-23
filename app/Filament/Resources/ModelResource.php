@@ -25,7 +25,10 @@ class ModelResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Model')
-                    ->required(),
+                    ->unique(ignoreRecord: true)
+                    ->required()    
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn ($state) => trim($state)),
             ]);
     }
 
@@ -43,6 +46,7 @@ class ModelResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

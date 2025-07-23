@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('uniform_inventories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('inventory_record_id')->constrained()->cascadeOnDelete(); // Ties to existing inventory
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete(); // Ties to existing inventory
             $table->json('details')->nullable();
             $table->timestamps();
             $table->softDeletes();

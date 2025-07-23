@@ -2,63 +2,50 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Widgets\ChartWidget;
 use App\Models\InventoryRecord;
-use Illuminate\Support\Carbon;
+use Filament\Widgets\Widget;
 
-class InventoryOverviewChart extends ChartWidget
+class InventoryOverviewChart extends Widget
 {
+    protected static string $view = 'filament.widgets.inventory-overview-chart';
+    protected static ?int $sort = 5;
     protected static ?string $heading = 'Inventory Overview';
-    protected static ?int $sort = 4; // Adjust the sort order as needed
-    protected static ?string $maxHeight = '300px'; // Set a maximum height for the chart
-    
+    protected static ?string $maxHeight = '300px';
 
-
-    protected function getData(): array
+    public function getData(): array
     {
+        $statuses = ['Functional', 'Defective', 'Damaged', 'In maintenance'];
+
         return [
+            'labels' => $statuses,
             'datasets' => [
                 [
-                    'label' => 'Inventory Status Distribution',
-                    'data' => [
-                        InventoryRecord::where('status', 'Functional')->count(),
-                        InventoryRecord::where('status', 'defective')->count(),
-                        InventoryRecord::where('status', 'damaged')->count(),
-                        InventoryRecord::where('status', 'in maintenance')->count(),
-                    ],
-                    'backgroundColor' => [
-                        '#4CAF50', // Functional
-                        '#F44336', // Defective
-                        '#FF9800', // Damaged
-                        '#2196F3', // In Maintenance
-                    ],
+                    'label' => 'Inventory Status',
+                    'data' => array_map(fn ($status) => InventoryRecord::where('status', $status)->count(), $statuses),
+                    'backgroundColor' => ['#4CAF50', '#F44336', '#FF9800', '#2196F3'],
+                    'borderColor' => ['#4CAF50', '#F44336', '#FF9800', '#2196F3'],
+                    'fill' => true,
                 ],
             ],
-            'labels' => ['Functional', 'Defective', 'Damaged', 'In Maintenance'],
         ];
     }
 
-    protected function getType(): string
+    public function getRadarData(): array
     {
-        return 'doughnut';
-    }
+        $types = ['Functional', 'Defective', 'Damaged', 'In maintenance'];
 
-    protected function getOptions(): array
-    {
         return [
-            'plugins' => [
-                'legend' => [
-                    'display' => true,
-                ],
-            ],
-            'scales' => [
-                'x' => [
-                    'display' => false,
-                ],
-                'y' => [
-                    'display' => false,
+            'labels' => $types,
+            'datasets' => [
+                [
+                    'label' => 'Inventory by Type',
+                    'data' => array_map(fn ($type) =>
+                        InventoryRecord::where('status', $type)->count(), $types),
+                    'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
+                    'borderColor' => 'rgba(54, 162, 235, 1)',
                 ],
             ],
         ];
     }
+
 }

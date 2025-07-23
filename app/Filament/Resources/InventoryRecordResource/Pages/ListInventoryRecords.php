@@ -23,13 +23,12 @@ class ListInventoryRecords extends ListRecords
     {
         return [
             'All' => Tab::make('All'),
-            'Borrowed' => Tab::make('Borrowed')->modifyQueryUsing(fn ($query) => $query->where('borrowed', true)),
-            'Available' => Tab::make('Available')->modifyQueryUsing(fn ($query) => $query->where('borrowed', false)),
             'Functional' => Tab::make('Functional')->modifyQueryUsing(fn ($query) => $query->where('status', 'functional')),
             'Defective' => Tab::make('Defective')->modifyQueryUsing(fn ($query) => $query->where('status', 'defective')),
             'Damaged' => Tab::make('Damaged')->modifyQueryUsing(fn ($query) => $query->where('status', 'damaged')),
             'In Maintenance' => Tab::make('In Maintenance')->modifyQueryUsing(fn ($query) => $query->where('status', 'in maintenance')),
-            
+            'Lost' => Tab::make('Lost')->modifyQueryUsing(fn ($query) => $query->where('status', 'lost')),
+            'Disposed' => Tab::make('Disposed')->modifyQueryUsing(fn ($query) => $query->where('status', 'disposed')),
         ];
     }
 }

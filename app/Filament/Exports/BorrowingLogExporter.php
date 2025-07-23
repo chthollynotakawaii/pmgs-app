@@ -26,6 +26,7 @@ class BorrowingLogExporter extends Exporter
             ExportColumn::make('inventoryRecord.location.name')->label('Location From'),
             ExportColumn::make('user.name')->label('Borrower'),
             ExportColumn::make('user.department.name')->label("Borrower's Department"),
+            ExportColumn::make('custom_borrower')->label('External Borrower'),
             ExportColumn::make('location.name')->label('Location To'),
             ExportColumn::make('quantity')->label('Quantity'),
             ExportColumn::make('returned_at')->label('Returned At'),

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UniformDistributionResource\Pages;
 use App\Models\UniformDistribution;
 use App\Models\UniformSize;
+use App\Models\UniformStockSummary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -24,6 +25,7 @@ use Filament\Forms\Components\DatePicker;
 class UniformDistributionResource extends Resource
 {
     protected static ?string $model = UniformDistribution::class;
+    protected static ?string $navigationGroup = 'Uniform Management';
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationIcon = 'heroicon-s-identification';
 
@@ -31,44 +33,62 @@ class UniformDistributionResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('student_identification_id')
-                    ->label('Student ID')
-                    ->options(UniformSize::query()
-                        ->orderBy('student_identification')
-                        ->pluck('student_identification', 'id'))
+                Select::make('student_name_id')
+                    ->label('Student Name')
+                    ->relationship(
+                        name: 'uniformSize',
+                        titleAttribute: 'student_name',
+                        modifyQueryUsing: fn ($query) => $query->whereDoesntHave('uniformDistribution')
+                    )
                     ->searchable()
                     ->reactive()
                     ->afterStateUpdated(function ($state, Set $set) {
                         $uniformSize = UniformSize::find($state);
-
-                        if (! $uniformSize || ! is_array($uniformSize->sizes)) {
-                            return;
-                        }
-
-                        $set('sizes_id', collect($uniformSize->sizes)->values()->toArray());
+                        if (! $uniformSize) return;
+                        $set('sizes_id', []);
                     })
+                    ->preload()
+                    ->visibleOn('create')
+                    ->columnSpanFull()
                     ->required(),
 
                 TextInput::make('receipt_number')
                     ->label('Receipt Number')
-                    ->required(),
+                    ->columnSpanFull(),
 
                 CheckboxList::make('sizes_id')
                     ->label('Uniform Sizes')
                     ->options(function (Get $get) {
-                        $uniformSize = UniformSize::find($get('student_identification_id'));
+                        $uniformSize = \App\Models\UniformSize::find($get('student_name_id'));
 
-                        if (! $uniformSize || ! is_array($uniformSize->sizes)) {
-                            return [];
-                        }
+                        $sizes = is_array($uniformSize?->sizes)
+                            ? $uniformSize->sizes
+                            : json_decode($uniformSize?->sizes ?? '[]', true);
 
-                        return collect($uniformSize->sizes)->mapWithKeys(function ($size, $index) {
-                            $label = "Type: {$size['uniform_type']} | Size: {$size['size']} | Quantity: {$size['quantity']}";
-                            return [$index => $label];
-                        })->toArray();
+                        return collect($sizes)
+                            ->mapWithKeys(function ($item) {
+                                $key = base64_encode(json_encode($item)); // Safe unique string key
+                                $label = "Type: {$item['uniform_type']} | Size: {$item['size']} | Qty: {$item['quantity']}";
+                                return [$key => $label];
+                            })
+                            ->toArray();
                     })
-                    ->columns(1)
-                    ->required(),
+                    ->afterStateHydrated(function (Set $set, Get $get, $state) {
+                        if (! is_array($state)) return;
+
+                        $encoded = collect($state)
+                            ->map(fn ($item) => base64_encode(json_encode($item)))
+                            ->toArray();
+
+                        $set('sizes_id', $encoded);
+                    })
+                    ->dehydrateStateUsing(function (?array $state) {
+                        return collect($state)
+                            ->map(fn ($encoded) => json_decode(base64_decode($encoded), true))
+                            ->toArray();
+                    })
+                    ->required()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -76,58 +96,19 @@ class UniformDistributionResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('studentIdentification.student_identification')
-                    ->label('Student ID')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
-
-                TextColumn::make('studentIdentification.student_name')
-                    ->label('Student Name')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
-
-                TextColumn::make('studentIdentification.department.name')
-                    ->label('Department')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
-
-                TextColumn::make('studentIdentification.course.name')
-                    ->label('Course')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
-
-                TextColumn::make('receipt_number')
-                    ->label('Receipt Number')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
-
-                TextColumn::make('created_at')
-                    ->label('Date Issued')
-                    ->date()
-                    ->sortable()
-                    ->toggleable(),
+                TextColumn::make('uniformSize.student_identification')->label('Student ID')->sortable()->searchable(),
+                TextColumn::make('uniformSize.student_name')->label('Student Name')->sortable()->searchable(),
+                TextColumn::make('uniformSize.department.name')->label('Department')->sortable()->searchable(),
+                TextColumn::make('uniformSize.course.name')->label('Course')->sortable()->searchable(),
+                TextColumn::make('receipt_number')->label('Receipt Number')->sortable()->searchable(),
+                TextColumn::make('created_at')->label('Date Issued')->datetime()->sortable(),
+                TextColumn::make('updated_at')->label('Date Updated')->datetime()->sortable(),
             ])
             ->filters([
                 TrashedFilter::make(),
-
-                SelectFilter::make('department_id')
-                    ->label('Department')
-                    ->relationship('studentIdentification.department', 'name'),
-    
-                SelectFilter::make('course_id')
-                    ->label('Course')
-                    ->relationship('studentIdentification.course', 'name'),
-    
-                SelectFilter::make('student_identification_id')
-                    ->label('Student')
-                    ->relationship('studentIdentification', 'student_name')
-                    ->searchable(),
-    
+                SelectFilter::make('department_id')->label('Department')->relationship('uniformSize.department', 'name'),
+                SelectFilter::make('course_id')->label('Course')->relationship('uniformSize.course', 'name'),
+                SelectFilter::make('student_name')->label('Student')->relationship('uniformSize', 'student_name')->searchable(),
                 Filter::make('created_at')
                     ->form([
                         DatePicker::make('from')->label('From'),
@@ -146,12 +127,10 @@ class UniformDistributionResource extends Resource
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\RestoreAction::make(),
                     Tables\Actions\ForceDeleteAction::make(),
-                ])
+                ]),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
