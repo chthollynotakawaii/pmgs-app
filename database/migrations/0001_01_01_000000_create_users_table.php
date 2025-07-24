@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('role')->default('admin'); // Default role is 'user'
             $table->foreignId('department_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('password');
+            $table->timestamp('last_seen')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

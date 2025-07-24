@@ -40,7 +40,10 @@ class CourseResource extends Resource
                 TextColumn::make('name')
                     ->label('Course')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->unique(ignoreRecord: true)
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn ($state) => trim($state)),
             ])
             ->filters([
                 //

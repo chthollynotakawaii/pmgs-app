@@ -17,6 +17,8 @@ use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Hash;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Support\Colors\Color;
 
 class UserResource extends Resource
 {
@@ -30,9 +32,15 @@ class UserResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->required()
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->unique(ignoreRecord: true)
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn ($state) => trim($state)),
                 TextInput::make('username')
-                    ->required(),
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn ($state) => trim($state)),
                 Select::make('role')
                     ->options([
                         'admin' => 'Admin',
@@ -40,15 +48,13 @@ class UserResource extends Resource
                     ])
                     ->default('user')
                     ->required(),
-
-
-TextInput::make('password')
-    ->label('Password')
-    ->password()
-    ->revealable()
-    ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
-    ->required(fn (string $context): bool => $context === 'create')
-    ->dehydrated(fn ($state) => filled($state)),
+                TextInput::make('password')
+                    ->label('Password')
+                    ->password()
+                    ->revealable()
+                    ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
+                    ->required(fn (string $context): bool => $context === 'create')
+                    ->dehydrated(fn ($state) => filled($state)),
 
                 Select::make('department_id')
                     ->label('Department')
@@ -88,6 +94,13 @@ TextInput::make('password')
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->toggleable(),
+                IconColumn::make('Current Active')
+                ->getStateUsing(fn ($record) => $record->isOnline())
+                ->boolean()
+                ->alignCenter()
+                ->trueIcon('heroicon-m-check-circle')
+                ->falseIcon('heroicon-m-x-circle')
+                ->color(fn (bool $state) => $state ? Color::Green : Color::Gray),
             ])
             ->filters([
                 //

@@ -36,11 +36,12 @@ class InventoryListWidget extends TableWidget
     protected function getTableColumns(): array
     {
         return [
-            TextColumn::make('temp_serial')->label('Serial Number')->sortable()->searchable(),
             TextColumn::make('qty')->label('Quantity'),
             TextColumn::make('unit')->label('Unit'),
-            TextColumn::make('brand.name')->label('Brand')->searchable(),
-            TextColumn::make('model.name')->label('Model')->searchable(),
+            TextColumn::make('description')->label('Description')->sortable()->searchable(),
+            TextColumn::make('brand.name')->label('Brand')->sortable()->searchable(),
+            TextColumn::make('model.name')->label('Model')->sortable()->searchable(),
+            TextColumn::make('temp_serial')->label('Serial Number')->searchable(),
         ];
     }
     public static function pollingInterval(): ?string

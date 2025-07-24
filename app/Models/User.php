@@ -16,6 +16,12 @@ public function canAccessPanel(Panel $panel): bool
 {
     return $this->role === $panel->getId(); // Match role with panel ID (e.g., 'admin', 'user')
 }
+public function isOnline(): bool
+{
+    return $this->last_seen && $this->last_seen->gt(now()->subMinutes(5));
+}
+
+
 
     public $timestamps = true;
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -38,6 +44,7 @@ public function canAccessPanel(Panel $panel): bool
         'department',
         'role',
         'password',
+        'last_seen', // ✅ Add this
     ];
 
     /**
@@ -60,6 +67,7 @@ public function canAccessPanel(Panel $panel): bool
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_seen' => 'datetime', // ✅ Add this
         ];
     }
     public function department() { return $this->belongsTo(Department::class); }

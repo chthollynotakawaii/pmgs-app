@@ -24,7 +24,10 @@ class CategoryResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Category')
-                    ->required(),
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn ($state) => trim($state)),
             ]);
     }
 

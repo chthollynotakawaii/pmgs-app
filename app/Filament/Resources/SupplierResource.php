@@ -25,11 +25,17 @@ class SupplierResource extends Resource
             ->schema([
                 TextInput::make('name')
                     ->label('Supplier')
-                    ->required(),
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn ($state) => trim($state)),
 
                 TextInput::make('email')
                     ->label('Email')
-                    ->email(),
+                    ->email()                
+                    ->unique(ignoreRecord: true)
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn ($state) => trim($state)),
                     
                 TextInput::make('phone')
                     ->label('Phone')
@@ -44,7 +50,9 @@ class SupplierResource extends Resource
                             $set('phone', $formatted);
                         }
                     })
-                    ->dehydrateStateUsing(fn (?string $state) => $state),
+                    ->unique(ignoreRecord: true)
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('name', trim($state)))
+                    ->dehydrateStateUsing(fn (?string $state) => trim($state)),
                 
                 TextInput::make('address')
                     ->label('Address')

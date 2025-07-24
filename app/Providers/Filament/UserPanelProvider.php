@@ -23,12 +23,17 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Hardikkhorasiya09\ChangePassword\ChangePasswordPlugin;
-use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
+use Filament\View\PanelsRenderHook;
+use Filament\Support\Facades\FilamentView;
 
 class UserPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        FilamentView::registerRenderHook(
+        PanelsRenderHook::HEAD_END,
+        fn () => '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>'
+        );
         return $panel
             ->id('user')
             ->path('user')
@@ -58,7 +63,6 @@ class UserPanelProvider extends PanelProvider
             ])
             ->plugins([
                 ChangePasswordPlugin::make(),
-                AuthUIEnhancerPlugin::make(), 
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -70,6 +74,7 @@ class UserPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \App\Http\Middleware\TrackLastSeen::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

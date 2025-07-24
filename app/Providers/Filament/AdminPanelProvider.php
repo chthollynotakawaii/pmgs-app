@@ -26,17 +26,17 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        // FilamentView::registerRenderHook(
-        // PanelsRenderHook::HEAD_END,
-        // fn () => '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>'
-        // );
+        FilamentView::registerRenderHook(
+        PanelsRenderHook::HEAD_END,
+        fn () => '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>'
+        );
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
             ->brandName('PMGS')
-            ->topNavigation()
-            // ->sidebarCollapsibleOnDesktop()
+            // ->topNavigation()
+            ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full')
             ->font('poppins')
             ->favicon(asset('images/logo.png'))
@@ -84,6 +84,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \App\Http\Middleware\TrackLastSeen::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
